@@ -1,0 +1,6 @@
+Invoking command in '/home/marko/comp3431_workspace/build/wall_follower': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /home/marko/comp3431_workspace/src/wall_follower/wall_follower -DCMAKE_INSTALL_PREFIX=/home/marko/comp3431_workspace/install/wall_follower
+Invoked command in '/home/marko/comp3431_workspace/build/wall_follower' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /home/marko/comp3431_workspace/src/wall_follower/wall_follower -DCMAKE_INSTALL_PREFIX=/home/marko/comp3431_workspace/install/wall_follower
+Invoking command in '/home/marko/comp3431_workspace/build/wall_follower': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/marko/comp3431_workspace/build/wall_follower -- -j12 -l12
+Invoked command in '/home/marko/comp3431_workspace/build/wall_follower' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/marko/comp3431_workspace/build/wall_follower -- -j12 -l12
+Invoking command in '/home/marko/comp3431_workspace/build/wall_follower': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/marko/comp3431_workspace/build/wall_follower
+Invoked command in '/home/marko/comp3431_workspace/build/wall_follower' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/marko/comp3431_workspace/build/wall_follower
