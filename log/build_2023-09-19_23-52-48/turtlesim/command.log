@@ -1,4 +1,0 @@
-Invoking command in '/home/marko/comp3431_workspace/build/turtlesim': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/marko/comp3431_workspace/build/turtlesim -- -j12 -l12
-Invoked command in '/home/marko/comp3431_workspace/build/turtlesim' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/marko/comp3431_workspace/build/turtlesim -- -j12 -l12
-Invoking command in '/home/marko/comp3431_workspace/build/turtlesim': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/marko/comp3431_workspace/build/turtlesim
-Invoked command in '/home/marko/comp3431_workspace/build/turtlesim' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/marko/comp3431_workspace/build/turtlesim
