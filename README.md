@@ -1,7 +1,7 @@
 # COMP3431_Robotics
 
 # Running wall follower on sim
-*make sure your cwd is yuor workspace
+*make sure your cwd is your workspace
 1.  rosdep install -i --from-path src --rosdistro foxy -y
 2.  colcon build --symlink-install
 3.  source /opt/ros/foxy/setup.bash
