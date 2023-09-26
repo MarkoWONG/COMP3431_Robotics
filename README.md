@@ -10,3 +10,6 @@
 6.  Open new terminal and in this new terminal do the following
 7.  source install/local_setup.bash
 8.  ros2 run wall_follower wall_follower
+
+# Notes
+If your build fails check if there is a empty folder called "launch" in the src/wall_follower/wall_follower. If the folder doesn't exist then create the folder.
