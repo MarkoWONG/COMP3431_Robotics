@@ -126,21 +126,22 @@ void WallFollower::update_callback()
 	switch (turtlebot3_state_num)
 	{
 		case GET_TB3_DIRECTION:
-			if (scan_data_[CENTER] < check_forward_dist)
-			{
+			if (scan_data_[CENTER] > check_forward_dist) {
+				if (scan_data_[LEFT] < check_side_dist) {
 				prev_robot_pose_ = robot_pose_;
 				turtlebot3_state_num = TB3_RIGHT_TURN;
-			}
-			else if (scan_data_[LEFT] < check_side_dist) {
-				prev_robot_pose_ = robot_pose_;
-				turtlebot3_state_num = TB3_RIGHT_TURN;
-			}
-			else if (scan_data_[LEFT] > check_side_dist) {
-				prev_robot_pose_ = robot_pose_;
-				turtlebot3_state_num = TB3_LEFT_TURN;
+				}
+				else if (scan_data_[LEFT] > check_side_dist) {
+					prev_robot_pose_ = robot_pose_;
+					turtlebot3_state_num = TB3_LEFT_TURN;
+				}
+				else {
+					turtlebot3_state_num = TB3_DRIVE_FORWARD;
+				}
 			}
 			else {
-				turtlebot3_state_num = TB3_DRIVE_FORWARD;
+				prev_robot_pose_ = robot_pose_;
+				turtlebot3_state_num = TB3_RIGHT_TURN;
 			}
 			break;
 		case TB3_DRIVE_FORWARD:
