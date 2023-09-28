@@ -11,10 +11,7 @@
 7.  source install/local_setup.bash
 8.  ros2 run wall_follower wall_follower
 
-# Notes
-If your build fails check if there is a empty folder called "launch" in the src/wall_follower/wall_follower. If the folder doesn't exist then create the folder.
-
-# Adding custom maze to sim
+## Adding custom maze to sim
 *this takes place inbetween steps 5 and 6 of "Running wall follower on sim"
 1. In gazebo, to the insert tab locationed on the left panel
 2. click on add path
@@ -24,3 +21,5 @@ If your build fails check if there is a empty folder called "launch" in the src/
 6. you can click on the level of choice
 7. Place the maze by click on the grid of where you want to place it (make sure to position it so the robot is in the maze)
 
+# Notes
+If your build fails check if there is a empty folder called "launch" in the src/wall_follower/wall_follower. If the folder doesn't exist then create the folder.
