@@ -42,8 +42,6 @@ WallFollower::WallFollower()
 	auto qos = rclcpp::QoS(rclcpp::KeepLast(10));
 
 	// Initialise publishers
-
-	// publisher to 
 	cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", qos);
 
 	// Initialise subscribers
@@ -119,31 +117,38 @@ void WallFollower::update_cmd_vel(double linear, double angular)
 void WallFollower::update_callback()
 {
 	static uint8_t turtlebot3_state_num = 0;
-	double escape_range = 10.0 * DEG2RAD;
+	double escape_range = 30.0 * DEG2RAD;
 	double check_forward_dist = 0.7;
 	double check_side_dist = 0.6;
 
 	switch (turtlebot3_state_num)
 	{
 		case GET_TB3_DIRECTION:
-			if (scan_data_[CENTER] > check_forward_dist) {
-				if (scan_data_[LEFT] < check_side_dist) {
-				prev_robot_pose_ = robot_pose_;
-				turtlebot3_state_num = TB3_RIGHT_TURN;
+			if (scan_data_[CENTER] > check_forward_dist)
+			{
+				if (scan_data_[LEFT] < check_side_dist)
+				{
+					prev_robot_pose_ = robot_pose_;
+					turtlebot3_state_num = TB3_RIGHT_TURN;
 				}
-				else if (scan_data_[LEFT] > check_side_dist) {
+				else if (scan_data_[RIGHT] < check_side_dist)
+				{
 					prev_robot_pose_ = robot_pose_;
 					turtlebot3_state_num = TB3_LEFT_TURN;
 				}
-				else {
+				else
+				{
 					turtlebot3_state_num = TB3_DRIVE_FORWARD;
 				}
 			}
-			else {
+
+			if (scan_data_[CENTER] < check_forward_dist)
+			{
 				prev_robot_pose_ = robot_pose_;
 				turtlebot3_state_num = TB3_RIGHT_TURN;
 			}
 			break;
+
 		case TB3_DRIVE_FORWARD:
 			update_cmd_vel(LINEAR_VELOCITY, 0.0);
 			turtlebot3_state_num = GET_TB3_DIRECTION;
