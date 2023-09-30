@@ -137,7 +137,7 @@ void WallFollower::update_callback()
 				{
 					RCLCPP_INFO(this->get_logger(), "Left Wall and Front Wall");
 					prev_robot_pose_ = robot_pose_;
-					turtlebot3_state_num = TB3_RIGHT_TURN;
+					update_cmd_vel(0.0, -1 * ANGULAR_VELOCITY);
 				}
 				// A wall on the LHS but not the front, go straight
 				else 
@@ -149,37 +149,15 @@ void WallFollower::update_callback()
 			// No Walls on the LHS, turn left
 			else 
 			{
-				RCLCPP_INFO(this->get_logger(), "NO Left Wall")
+				RCLCPP_INFO(this->get_logger(), "NO Left Wall");
 				prev_robot_pose_ = robot_pose_;
-				turtlebot3_state_num = TB3_LEFT_TURN;
+				update_cmd_vel(0.0, ANGULAR_VELOCITY);
 			}
 			break;
 
 		case TB3_DRIVE_FORWARD:
 			update_cmd_vel(LINEAR_VELOCITY, 0.0);
 			turtlebot3_state_num = GET_TB3_DIRECTION;
-			break;
-
-		case TB3_RIGHT_TURN:
-			if (fabs(prev_robot_pose_ - robot_pose_) >= escape_range)
-			{
-				turtlebot3_state_num = GET_TB3_DIRECTION;
-			}
-			else
-			{
-				update_cmd_vel(0.0, -1 * ANGULAR_VELOCITY);
-			}
-			break;
-
-		case TB3_LEFT_TURN:
-			if (fabs(prev_robot_pose_ - robot_pose_) >= escape_range)
-			{
-				turtlebot3_state_num = GET_TB3_DIRECTION;
-			}
-			else
-			{
-				update_cmd_vel(0.0, ANGULAR_VELOCITY);
-			}
 			break;
 
 		default:
