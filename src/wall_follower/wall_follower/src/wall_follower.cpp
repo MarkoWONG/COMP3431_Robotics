@@ -108,6 +108,10 @@ void WallFollower::update_cmd_vel(double linear, double angular)
 	cmd_vel.linear.x = linear;
 	cmd_vel.angular.z = angular;
 
+	if (cmd_vel.angular.z > 1) {
+		RCLCPP_INFO(this->get_logger(), "%lf", cmd_vel.angular.z);
+	}
+
 	cmd_vel_pub_->publish(cmd_vel);
 }
 
@@ -117,9 +121,9 @@ void WallFollower::update_cmd_vel(double linear, double angular)
 void WallFollower::update_callback()
 {
 	static uint8_t turtlebot3_state_num = 0;
-	double escape_range = 30.0 * DEG2RAD; // Change this number !!!
-	double check_forward_dist = 0.7; // Change this number !!!
-	double check_side_dist = 0.6; // Change this number!!!
+	double escape_range = 45.0 * DEG2RAD; // Change this number !!!
+	double check_forward_dist = 0.3; // Change this number !!!
+	double check_side_dist = 0.2; // Change this number!!!
 
 	switch (turtlebot3_state_num)
 	{
@@ -131,18 +135,21 @@ void WallFollower::update_callback()
 				// A wall on the LHS and in the front, turn right
 				if (scan_data_[CENTER] < check_forward_dist) 
 				{
+					RCLCPP_INFO(this->get_logger(), "Left Wall and Front Wall");
 					prev_robot_pose_ = robot_pose_;
 					turtlebot3_state_num = TB3_RIGHT_TURN;
 				}
 				// A wall on the LHS but not the front, go straight
 				else 
 				{
+					RCLCPP_INFO(this->get_logger(), "Left Wall but Front Wall");
 					turtlebot3_state_num = TB3_DRIVE_FORWARD;
 				}
 			}
 			// No Walls on the LHS, turn left
 			else 
 			{
+				RCLCPP_INFO(this->get_logger(), "NO Left Wall")
 				prev_robot_pose_ = robot_pose_;
 				turtlebot3_state_num = TB3_LEFT_TURN;
 			}
