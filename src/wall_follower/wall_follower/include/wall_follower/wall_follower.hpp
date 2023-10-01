@@ -23,7 +23,6 @@
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
-#include <math.h>
 
 #define DEG2RAD (M_PI / 180.0)
 #define RAD2DEG (180.0 / M_PI)
@@ -34,7 +33,7 @@
 #define RIGHT  3
 
 #define LINEAR_VELOCITY  0.1
-#define ANGULAR_VELOCITY 0.1
+#define ANGULAR_VELOCITY 0.3
 
 #define GET_TB3_DIRECTION 0
 #define TB3_DRIVE_FORWARD 1

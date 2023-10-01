@@ -125,42 +125,41 @@ void WallFollower::update_callback()
 {
 	static uint8_t turtlebot3_state_num = 0;
 	// This is the amount the robot turns before changing state.
-	double escape_range = 5.0 * DEG2RAD; // Change this number!!!
-	double min_wall_dist = 0.1; 
-	double min_wall_dist_left = 0.3;
-	double min_wall_dist_front = 0.3;
-	double max_wall_dist_react = 0.8;
-	double reverse_dist = 0.1;
-
+	double escape_range = 1 * DEG2RAD; // Change this number!!!
+	double front_obstacle_threshold = 0.5;
+	double side_obstacle_threshold = 0.2;
+	double wall_detection_threshold = 0.2;
+	double empty_space_threshold = 0.5;
+	double reverse_threshold = 0.1;
 
 	switch (turtlebot3_state_num)
 	{
 		case GET_TB3_DIRECTION:
 			
 			// No Wall in the front (Front Wall is far away)
-			if (scan_data_[CENTER] > min_wall_dist_front)
+			if (scan_data_[CENTER] > front_obstacle_threshold)
 			{
 				// Too close to the left wall, turn right
-				if (scan_data_[LEFT] < min_wall_dist_left || cos(45 * DEG2RAD) * scan_data_[LEFT_TOP_CORNER] < min_wall_dist_left) 
+				if (scan_data_[LEFT] < side_obstacle_threshold || cos(45 * DEG2RAD) * scan_data_[LEFT_TOP_CORNER] < wall_detection_threshold) 
 				{
 					RCLCPP_INFO(this->get_logger(), "Too close to the LEFT WALL, Turn Right");
 					prev_robot_pose_ = robot_pose_;
 					turtlebot3_state_num = TB3_RIGHT_TURN;
 
-					deviation = fabs(scan_data_[LEFT_TOP_CORNER] - min_wall_dist);
+					deviation = fabs(scan_data_[LEFT_TOP_CORNER] - wall_detection_threshold);
 				}
 				// A Left Wall with Normal distance
-				if (scan_data_[LEFT] < min_wall_dist_left)
+				else if (scan_data_[LEFT] < wall_detection_threshold)
 				{
 					RCLCPP_INFO(this->get_logger(), "A LEFT WALL with normal distance, Go Straight");
 					turtlebot3_state_num = TB3_DRIVE_FORWARD;
 				}
-				else if (scan_data_[LEFT] > min_wall_dist_left || cos(45 * DEG2RAD) * scan_data_[LEFT_TOP_CORNER] > min_wall_dist_left)
+				else if (scan_data_[LEFT] > wall_detection_threshold || cos(45 * DEG2RAD) * scan_data_[LEFT_TOP_CORNER] > wall_detection_threshold)
 				{
 					// The left wall has not been detected/too far. 
 
 					//if the robot is far from anything, it will go straight
-					if (scan_data_[CENTER] > max_wall_dist_react && scan_data_[LEFT] > max_wall_dist_react)
+					if (scan_data_[CENTER] > empty_space_threshold && scan_data_[LEFT] > empty_space_threshold)
 					{
 						RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. GOING STRAIGHT");
 						turtlebot3_state_num = TB3_DRIVE_FORWARD;
@@ -170,17 +169,17 @@ void WallFollower::update_callback()
 						RCLCPP_INFO(this->get_logger(), "Left wall is too far. TURNING LEFT");
 						prev_robot_pose_ = robot_pose_;
 						turtlebot3_state_num = TB3_LEFT_TURN;
-						deviation = fabs(scan_data_[LEFT] - min_wall_dist);
+						deviation = fabs(scan_data_[LEFT] - wall_detection_threshold);
 					}
 				}
-				else if (scan_data_[RIGHT] < min_wall_dist)
+				else if (scan_data_[RIGHT] < side_obstacle_threshold)
 					// Robot turns right to avoid obstacles on the right.
 				{
 					RCLCPP_INFO(this->get_logger(), "too close to right wall. TURNING LEFT");
 					prev_robot_pose_ = robot_pose_;
 					turtlebot3_state_num = TB3_LEFT_TURN;
 
-					deviation = fabs(scan_data_[RIGHT] - min_wall_dist);
+					deviation = fabs(scan_data_[RIGHT] - side_obstacle_threshold);
 				}
 				else
 				{
@@ -188,10 +187,10 @@ void WallFollower::update_callback()
 				}
 			}
 
-			if (scan_data_[CENTER] < min_wall_dist_front)
+			if (scan_data_[CENTER] < front_obstacle_threshold)
 			{
 				// There is a wall in front of the robot.
-				if (scan_data_[CENTER] < reverse_dist)
+				if (scan_data_[CENTER] < reverse_threshold)
 				{
 					RCLCPP_INFO(this->get_logger(), "Obstacle in front is very close. REVERSING");
 					prev_robot_pose_ = robot_pose_;
@@ -214,7 +213,7 @@ void WallFollower::update_callback()
 			break;
 
 		case TB3_REVERSE:
-			update_cmd_vel(-LINEAR_VELOCITY, -ANGULAR_VELOCITY);
+			update_cmd_vel(-LINEAR_VELOCITY, ANGULAR_VELOCITY);
 			turtlebot3_state_num = GET_TB3_DIRECTION;
 			break;
 
@@ -230,15 +229,15 @@ void WallFollower::update_callback()
 			break;
 
 		case TB3_SHARP_RIGHT:
-			//if (fabs(prev_robot_pose_ - robot_pose_) >= escape_range)
-			//{
-			//	turtlebot3_state_num = GET_TB3_DIRECTION;
-			//}
-			//else
-			//{
-				//To make a sharp right, reduce linear velocity and increase angular velocity
+			if (fabs(prev_robot_pose_ - robot_pose_) >= escape_range)
+			{
+				turtlebot3_state_num = GET_TB3_DIRECTION;
+			}
+			else
+			{
+				// To make a sharp right, reduce linear velocity and increase angular velocity
 				update_cmd_vel(0, -1 * (ANGULAR_VELOCITY + 0.14 ));
-			//}
+			}
 			break;
 
 		case TB3_LEFT_TURN:
