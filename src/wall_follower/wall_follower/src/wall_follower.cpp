@@ -124,9 +124,9 @@ void WallFollower::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 void WallFollower::scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 {
 	//Center right, center, center left, left front, left mid, left, right
-	uint16_t scan_angle[7] = {340, 0, 20, 35, 55, 90, 270};
+	uint16_t scan_angle[8] = {340, 0, 20, 35, 55, 90, 270, 145};
 
-	for (int num = 0; num < 7; num++)
+	for (int num = 0; num < 8; num++)
 	{
 		if (std::isinf(msg->ranges.at(scan_angle[num])))
 		{
@@ -155,10 +155,10 @@ void WallFollower::update_callback()
 {
 	static uint8_t turtlebot3_state_num = 0;
 	double escape_range = 1 * DEG2RAD; // This is the amount the robot turns before changing states
-	double frontal_obstacle_threshold = 0.42;
-	double side_obstacle_threshold = 0.28;
-	double wall_detection_threshold = 0.33;
-	double empty_space_threshold = 0.34;
+	double frontal_obstacle_threshold = 0.35;
+	double side_obstacle_threshold = 0.2;
+	double wall_detection_threshold = 0.5;
+	double empty_space_threshold = 0.3;
 	double reverse_threshold = 0.1; // if the robot is closer than the reverse threshold, it will reverse to avoid obstacles.
 
 	switch (turtlebot3_state_num)
@@ -193,14 +193,14 @@ void WallFollower::update_callback()
 					// The left wall has not been detected/is too far. 
 
 					//if the robot is far from anything, it will go straight
-					if (robot_in_empty_space(empty_space_threshold))
+					if (robot_in_empty_space(empty_space_threshold, side_obstacle_threshold))
 					{
-						// RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. GOING STRAIGHT");
-						// turtlebot3_state_num = TB3_DRIVE_FORWARD;
-						RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. TURNING LEFT");
-						prev_robot_pose_ = robot_pose_;
-						turtlebot3_state_num = TB3_LEFT_TURN;
-						deviation = 1.5;
+						RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. GOING STRAIGHT");
+						turtlebot3_state_num = TB3_DRIVE_FORWARD;
+						//RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. TURNING LEFT");
+						//prev_robot_pose_ = robot_pose_;
+						//turtlebot3_state_num = TB3_LEFT_TURN;
+						//deviation = 1.5;
 
 					}
 					else {
@@ -337,9 +337,9 @@ bool WallFollower::left_detected(double wall_detection_threshold)
 	);
 }
 
-bool WallFollower::robot_in_empty_space(double empty_space_threshold)
+bool WallFollower::robot_in_empty_space(double empty_space_threshold, double side_obstacle_threshold)
 {
-	return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold));
+	return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold) && (cos(55 * DEG2RAD) * scan_data_[BOTTOM_LEFT] > side_obstacle_threshold));
 }
 
 /*******************************************************************************

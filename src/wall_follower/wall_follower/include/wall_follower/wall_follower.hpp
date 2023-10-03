@@ -39,11 +39,10 @@
 #define LEFT_MID 4
 #define LEFT 5
 #define RIGHT 6
-
+#define BOTTOM_LEFT 7
 
 // #define LINEAR_VELOCITY  0.07
 // #define ANGULAR_VELOCITY 0.2
-
 
 #define GET_TB3_DIRECTION 0
 #define TB3_DRIVE_FORWARD 1
@@ -52,6 +51,7 @@
 #define TB3_SHARP_RIGHT   4
 #define TB3_REVERSE       5
 #define TB3_SHARP_LEFT    6
+#define TB3_BOTTOM_LEFT   7
 
 #define PROPORTIONAL_CONSTANT 2.85
 
@@ -92,7 +92,7 @@ private:
   bool obstacle_in_front(double frontal_obstacle_threshold);
   bool left_too_close(double side_obstacle_threshold);
   bool left_detected(double wall_detection_threshold);
-  bool robot_in_empty_space(double empty_space_threshold);
+  bool robot_in_empty_space(double empty_space_threshold, double side_obstacle_threshold);
 
 };
 #endif  // TURTLEBOT3_GAZEBO__TURTLEBOT3_DRIVE_HPP_
