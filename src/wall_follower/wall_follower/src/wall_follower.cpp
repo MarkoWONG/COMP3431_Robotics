@@ -95,7 +95,7 @@ void WallFollower::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 void WallFollower::scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 {
 	//Center right, center, center left, left front, left mid, left, right
-	uint16_t scan_angle[8] = {340, 0, 20, 35, 55, 90, 270, 140};
+	uint16_t scan_angle[8] = {340, 0, 20, 35, 55, 90, 270, 145};
 
 	for (int num = 0; num < 8; num++)
 	{
@@ -178,7 +178,7 @@ void WallFollower::update_callback()
 					else {
 						RCLCPP_INFO(this->get_logger(), "Left wall is too far. TURNING LEFT");
 						prev_robot_pose_ = robot_pose_;
-						turtlebot3_state_num = TB3_LEFT_TURN;
+						turtlebot3_state_num = TB3_SHARP_LEFT;
 
 						double temp = fmax(scan_data_[LEFT], cos(55 * DEG2RAD) * scan_data_[LEFT_FRONT]);
 						double left_dist = fmax(temp, cos(35 * DEG2RAD) * scan_data_[LEFT_MID]);
@@ -271,7 +271,7 @@ void WallFollower::update_callback()
 			else
 			{
 				//To make a sharp left, reduce linear velocity and increase angular velocity
-				update_cmd_vel(LINEAR_VELOCITY / 2,ANGULAR_VELOCITY + 0.2);
+				update_cmd_vel(0,ANGULAR_VELOCITY + 0.14);
 			}
 			break;
 		
@@ -312,7 +312,7 @@ bool WallFollower::left_detected(double wall_detection_threshold)
 bool WallFollower::robot_in_empty_space(double empty_space_threshold)
 {
 	return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold)
-			&& scan_data_[LEFT_BACK] > 0.6);
+			&& !(cos(55 * DEG2RAD) * scan_data_[LEFT_BACK] < 0.33));
 }
 
 /*******************************************************************************
