@@ -41,9 +41,8 @@
 #define RIGHT 6
 #define BOTTOM_LEFT 7
 
-
-#define LINEAR_VELOCITY  0.2
-#define ANGULAR_VELOCITY 0.4
+// #define LINEAR_VELOCITY  0.07
+// #define ANGULAR_VELOCITY 0.2
 
 #define GET_TB3_DIRECTION 0
 #define TB3_DRIVE_FORWARD 1
@@ -74,6 +73,11 @@ private:
   double robot_pose_;
   double prev_robot_pose_;
   double scan_data_[7];
+
+  double LINEAR_VELOCITY;
+  double ANGULAR_VELOCITY;
+  bool leftStart;
+	double distFromStartTheshold;
 
   double deviation;
 
