@@ -23,6 +23,7 @@
 
 using namespace std::chrono_literals;
 
+// Wallfollower Node Constructor
 WallFollower::WallFollower()
 : Node("wall_follower_node")
 {
@@ -38,8 +39,13 @@ WallFollower::WallFollower()
 	scan_data_[6] = 0.0;
 	scan_data_[7] = 0.0;
 
+	// pose = the position and orientation of an object
 	robot_pose_ = 0.0;
 	prev_robot_pose_ = 0.0;
+
+	LINEAR_VELOCITY = 0.07;
+	ANGULAR_VELOCITY = 0.2;
+	distFromStartTheshold = 0.3;
 
 	deviation = 0.0; // The higher the distance deviated, the more quickly the robot turns
 
@@ -67,9 +73,13 @@ WallFollower::WallFollower()
 	************************************************************/
 	update_timer_ = this->create_wall_timer(10ms, std::bind(&WallFollower::update_callback, this)); //default value is 10ms
 
+	// Initialise wallfollower vars
+	leftStart = false;
+
 	RCLCPP_INFO(this->get_logger(), "Wall follower node has been initialised");
 }
 
+// Wallfollower Node Destructor
 WallFollower::~WallFollower()
 {
 	RCLCPP_INFO(this->get_logger(), "Wall follower node has been terminated");
@@ -90,7 +100,26 @@ void WallFollower::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 	m.getRPY(roll, pitch, yaw);
 
 	robot_pose_ = yaw;
+
+	// Check if the robot has returned to the start pose
+	double distance = sqrt(pow(msg->pose.pose.position.x, 2) +
+							pow(msg->pose.pose.position.y, 2));
+	
+	std::string test2 = "distance from the start is: ";
+	test2.append(std::to_string(distance));
+	RCLCPP_INFO(this->get_logger(), test2);
+
+	// Once robot is X distance away from start we can check when to stop robot
+	if (distance > distFromStartTheshold) {
+		leftStart = true;
+	}
+	else if (leftStart == true){
+		RCLCPP_INFO(this->get_logger(), "STOPPING ROBOT");
+		LINEAR_VELOCITY = 0;
+		ANGULAR_VELOCITY = 0;
+	};
 }
+
 
 void WallFollower::scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 {
