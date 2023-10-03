@@ -43,8 +43,8 @@ WallFollower::WallFollower()
 	robot_pose_ = 0.0;
 	prev_robot_pose_ = 0.0;
 
-	LINEAR_VELOCITY = 0.07;
-	ANGULAR_VELOCITY = 0.2;
+	LINEAR_VELOCITY = 0.2;
+	ANGULAR_VELOCITY = 0.4;
 	distFromStartTheshold = 0.3;
 
 	deviation = 0.0; // The higher the distance deviated, the more quickly the robot turns
