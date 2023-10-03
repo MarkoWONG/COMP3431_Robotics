@@ -232,7 +232,12 @@ void WallFollower::update_callback()
 			if (obstacle_in_front(frontal_obstacle_threshold))
 			{
 				// There is a wall in front of the robot.
-				if (obstacle_in_front(reverse_threshold))
+				if (!left_detected(wall_detection_threshold)) {
+					RCLCPP_INFO(this->get_logger(), "Obstacle in the front but no wall on LEFT");
+					prev_robot_pose_ = robot_pose_;
+					turtlebot3_state_num = TB3_LEFT_TURN;
+				}
+				else if (obstacle_in_front(reverse_threshold))
 				{
 					RCLCPP_INFO(this->get_logger(), "Obstacle in front is very close. REVERSING");
 					prev_robot_pose_ = robot_pose_;
