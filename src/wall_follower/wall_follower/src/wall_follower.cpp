@@ -45,8 +45,11 @@ WallFollower::WallFollower()
 
 	LINEAR_VELOCITY = 0.07;
 	ANGULAR_VELOCITY = 0.2;
-	distFromStartTheshold = 0.3;
+	distFromStartTheshold = 1;
 	leftStart = false;
+
+	startingX = 3.2;
+	startingY = 43;
 
 	deviation = 0.0; // The higher the distance deviated, the more quickly the robot turns
 
@@ -102,13 +105,20 @@ void WallFollower::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 
 	robot_pose_ = yaw;
 
+
 	// Check if the robot has returned to the start pose
-	double distance = sqrt(pow(msg->pose.pose.position.x, 2) +
-							pow(msg->pose.pose.position.y, 2));
+	double distance = sqrt(pow(msg->pose.pose.position.x - startingX, 2) +
+							pow(msg->pose.pose.position.y - startingY, 2));
 	
 	std::string test2 = "distance from the start is: ";
 	test2.append(std::to_string(distance));
 	RCLCPP_INFO(this->get_logger(), test2);
+
+	std::string test4 = "x: ";
+	test4.append(std::to_string(msg->pose.pose.position.x));
+	test4.append("y: ");
+	test4.append(std::to_string(msg->pose.pose.position.y));
+	RCLCPP_INFO(this->get_logger(), test4);
 	
 	// Once robot is X distance away from start we can check when to stop robot
 	if (distance > distFromStartTheshold) {
@@ -352,7 +362,7 @@ bool WallFollower::left_detected(double wall_detection_threshold)
 
 bool WallFollower::robot_in_empty_space(double empty_space_threshold, double side_obstacle_threshold)
 {
-	return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold) && (cos(55 * DEG2RAD) * scan_data_[BOTTOM_LEFT] > side_obstacle_threshold));
+	return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold) && (cos(55 * DEG2RAD) * scan_data_[BOTTOM_LEFT] < side_obstacle_threshold));
 }
 
 /*******************************************************************************

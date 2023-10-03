@@ -66,6 +66,9 @@ private:
 	double ANGULAR_VELOCITY ;
 	double distFromStartTheshold ;
 	bool leftStart ;
+  double startingX;
+  double startingY;
+  
 
   // ROS topic publishers
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
