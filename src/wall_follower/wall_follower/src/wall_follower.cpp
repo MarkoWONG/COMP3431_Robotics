@@ -46,6 +46,7 @@ WallFollower::WallFollower()
 	LINEAR_VELOCITY = 0.07;
 	ANGULAR_VELOCITY = 0.2;
 	distFromStartTheshold = 0.3;
+	leftStart = false;
 
 	deviation = 0.0; // The higher the distance deviated, the more quickly the robot turns
 
@@ -108,9 +109,10 @@ void WallFollower::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 	std::string test2 = "distance from the start is: ";
 	test2.append(std::to_string(distance));
 	RCLCPP_INFO(this->get_logger(), test2);
-
+	
 	// Once robot is X distance away from start we can check when to stop robot
 	if (distance > distFromStartTheshold) {
+		
 		leftStart = true;
 	}
 	else if (leftStart == true){
@@ -161,6 +163,12 @@ void WallFollower::update_callback()
 	double empty_space_threshold = 0.3;
 	double reverse_threshold = 0.1; // if the robot is closer than the reverse threshold, it will reverse to avoid obstacles.
 
+
+	// std::string test2 = "vel is: ";
+	// test2.append(std::to_string(LINEAR_VELOCITY));
+	// test2.append("command is: ");
+	// test2.append(std::to_string(turtlebot3_state_num));
+	// RCLCPP_INFO(this->get_logger(), test2);
 	switch (turtlebot3_state_num)
 	{
 		case GET_TB3_DIRECTION:

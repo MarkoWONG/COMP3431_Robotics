@@ -51,7 +51,6 @@
 #define TB3_SHARP_RIGHT   4
 #define TB3_REVERSE       5
 #define TB3_SHARP_LEFT    6
-#define TB3_BOTTOM_LEFT   7
 
 #define PROPORTIONAL_CONSTANT 2.85
 
@@ -62,6 +61,12 @@ public:
   ~WallFollower();
 
 private:
+
+  double LINEAR_VELOCITY ;
+	double ANGULAR_VELOCITY ;
+	double distFromStartTheshold ;
+	bool leftStart ;
+
   // ROS topic publishers
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
 
@@ -74,17 +79,14 @@ private:
   double prev_robot_pose_;
   double scan_data_[7];
 
-  double LINEAR_VELOCITY;
-  double ANGULAR_VELOCITY;
-  bool leftStart;
-	double distFromStartTheshold;
-
   double deviation;
 
   // ROS timer
   rclcpp::TimerBase::SharedPtr update_timer_;
 
   // Function prototypes
+  bool robot_in_empty_space(double empty_space_threshold, double side_obstacle_threshold);
+
   void update_callback();
   void update_cmd_vel(double linear, double angular);
   void scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
@@ -92,7 +94,7 @@ private:
   bool obstacle_in_front(double frontal_obstacle_threshold);
   bool left_too_close(double side_obstacle_threshold);
   bool left_detected(double wall_detection_threshold);
-  bool robot_in_empty_space(double empty_space_threshold, double side_obstacle_threshold);
+  bool robot_in_empty_space(double empty_space_threshold);
 
 };
 #endif  // TURTLEBOT3_GAZEBO__TURTLEBOT3_DRIVE_HPP_
