@@ -79,6 +79,7 @@ WallFollower::WallFollower()
 
 	// Initialise wallfollower vars
 	leftStart = false;
+	needStartingPos = true;
 
 	RCLCPP_INFO(this->get_logger(), "Wall follower node has been initialised");
 }
@@ -109,6 +110,11 @@ void WallFollower::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 	if (needStartingPos == true){
 		startingX = msg->pose.pose.position.x;
 		startingY = msg->pose.pose.position.y;
+		std::string debugline3 = "Starting position x: ";
+		debugline3.append(std::to_string(startingX));
+		debugline3.append(", Y: ");
+		debugline3.append(std::to_string(startingY));
+		RCLCPP_INFO(this->get_logger(), debugline3);
 		needStartingPos = false;
 	}
 
@@ -116,15 +122,15 @@ void WallFollower::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 	double distance = sqrt(pow(msg->pose.pose.position.x - startingX, 2) +
 							pow(msg->pose.pose.position.y - startingY, 2));
 	
-	std::string test2 = "distance from the start is: ";
-	test2.append(std::to_string(distance));
-	RCLCPP_INFO(this->get_logger(), test2);
+	std::string debugline1 = "distance from the start is: ";
+	debugline1.append(std::to_string(distance));
+	RCLCPP_INFO(this->get_logger(), debugline1);
 
-	std::string test4 = "x: ";
-	test4.append(std::to_string(msg->pose.pose.position.x));
-	test4.append("y: ");
-	test4.append(std::to_string(msg->pose.pose.position.y));
-	RCLCPP_INFO(this->get_logger(), test4);
+	std::string debugline2 = "x: ";
+	debugline2.append(std::to_string(msg->pose.pose.position.x));
+	debugline2.append("y: ");
+	debugline2.append(std::to_string(msg->pose.pose.position.y));
+	RCLCPP_INFO(this->get_logger(), debugline2);
 	
 	// Once robot is X distance away from start we can check when to stop robot
 	if (distance > distFromStartTheshold) {

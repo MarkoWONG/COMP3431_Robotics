@@ -68,6 +68,7 @@ private:
 	bool leftStart ;
   double startingX;
   double startingY;
+  bool needStartingPos;
   
 
   // ROS topic publishers
