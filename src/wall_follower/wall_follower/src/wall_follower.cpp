@@ -105,6 +105,12 @@ void WallFollower::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 
 	robot_pose_ = yaw;
 
+	// Set starting position of robot
+	if (needStartingPos == true){
+		startingX = msg->pose.pose.position.x;
+		startingY = msg->pose.pose.position.y;
+		needStartingPos = false;
+	}
 
 	// Check if the robot has returned to the start pose
 	double distance = sqrt(pow(msg->pose.pose.position.x - startingX, 2) +
