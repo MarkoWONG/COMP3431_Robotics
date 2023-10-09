@@ -45,7 +45,7 @@ WallFollower::WallFollower()
 
 	LINEAR_VELOCITY = 0.07;
 	ANGULAR_VELOCITY = 0.2;
-	distFromStartTheshold = 1;
+	distFromStartTheshold = 0.5;
 	leftStart = false;
 
 	startingX = 3.2;
@@ -181,7 +181,7 @@ void WallFollower::update_callback()
 	double escape_range = 1 * DEG2RAD; // This is the amount the robot turns before changing states
 	double frontal_obstacle_threshold = 0.35;
 	double side_obstacle_threshold = 0.2;
-	double wall_detection_threshold = 0.5;
+	double wall_detection_threshold = 0.35;
 	double empty_space_threshold = 0.3;
 	double reverse_threshold = 0.1; // if the robot is closer than the reverse threshold, it will reverse to avoid obstacles.
 
