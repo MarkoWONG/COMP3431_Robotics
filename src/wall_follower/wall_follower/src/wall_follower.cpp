@@ -225,12 +225,12 @@ void WallFollower::update_callback()
 					//if the robot is far from anything, it will go straight
 					if (robot_in_empty_space(empty_space_threshold, side_obstacle_threshold))
 					{
-						RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. GOING STRAIGHT");
-						turtlebot3_state_num = TB3_DRIVE_FORWARD;
-						//RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. TURNING LEFT");
-						//prev_robot_pose_ = robot_pose_;
-						//turtlebot3_state_num = TB3_LEFT_TURN;
-						//deviation = 1.5;
+						// RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. GOING STRAIGHT");
+						// turtlebot3_state_num = TB3_DRIVE_FORWARD;
+						RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. TURNING LEFT");
+						prev_robot_pose_ = robot_pose_;
+						turtlebot3_state_num = TB3_LEFT_TURN;
+						deviation = 1.5;
 
 					}
 					else {
@@ -374,7 +374,9 @@ bool WallFollower::left_detected(double wall_detection_threshold)
 
 bool WallFollower::robot_in_empty_space(double empty_space_threshold, double side_obstacle_threshold)
 {
-	return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold) && (cos(55 * DEG2RAD) * scan_data_[BOTTOM_LEFT] < side_obstacle_threshold));
+	//return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold) && (cos(55 * DEG2RAD) * scan_data_[BOTTOM_LEFT] < side_obstacle_threshold));
+	return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold));
+
 }
 
 /*******************************************************************************
