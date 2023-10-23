@@ -44,7 +44,7 @@ WallFollower::WallFollower()
 	prev_robot_pose_ = 0.0;
 
 	LINEAR_VELOCITY = 0.07;
-	ANGULAR_VELOCITY = 0.2;
+	ANGULAR_VELOCITY = 0.22;
 	// distFromStartTheshold = 0.25;
 	// leftStart = false;
 
@@ -122,9 +122,9 @@ void WallFollower::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 	double distance = sqrt(pow(msg->pose.pose.position.x - startingX, 2) +
 							pow(msg->pose.pose.position.y - startingY, 2));
 	
-	std::string debugline1 = "distance from the start is: ";
-	debugline1.append(std::to_string(distance));
-	RCLCPP_INFO(this->get_logger(), debugline1);
+	// std::string debugline1 = "distance from the start is: ";
+	// debugline1.append(std::to_string(distance));
+	// RCLCPP_INFO(this->get_logger(), debugline1);
 
 	// std::string debugline2 = "x: ";
 	// debugline2.append(std::to_string(msg->pose.pose.position.x));
@@ -178,12 +178,12 @@ void WallFollower::update_cmd_vel(double linear, double angular)
 void WallFollower::update_callback()
 {
 	static uint8_t turtlebot3_state_num = 0;
-	double escape_range = 1 * DEG2RAD; // This is the amount the robot turns before changing states
-	double frontal_obstacle_threshold = 0.33;
-	double side_obstacle_threshold = 0.21;
-	double wall_detection_threshold = 0.35;
+	double escape_range = 0.8 * DEG2RAD; // This is the amount the robot turns before changing states
+	double frontal_obstacle_threshold = 0.31;
+	double side_obstacle_threshold = 0.30;
+	double wall_detection_threshold = 0.33;
 	double empty_space_threshold = 0.3;
-	double reverse_threshold = 0.1; // if the robot is closer than the reverse threshold, it will reverse to avoid obstacles.
+	//double reverse_threshold = 0.1; // if the robot is closer than the reverse threshold, it will reverse to avoid obstacles.
 
 
 	// std::string test2 = "vel is: ";
@@ -223,15 +223,13 @@ void WallFollower::update_callback()
 					// The left wall has not been detected/is too far. 
 
 					//if the robot is far from anything, it will go straight
-					if (robot_in_empty_space(empty_space_threshold, side_obstacle_threshold))
+					if (robot_in_empty_space(empty_space_threshold)) //, side_obstacle_threshold
 					{
-						RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. GOING STRAIGHT");
-						turtlebot3_state_num = TB3_DRIVE_FORWARD;
-						// RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. TURNING LEFT");
-						// prev_robot_pose_ = robot_pose_;
-						// turtlebot3_state_num = TB3_LEFT_TURN;
-						// deviation = 1.5;
-
+						// RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. GOING STRAIGHT");
+						// turtlebot3_state_num = TB3_DRIVE_FORWARD;
+						RCLCPP_INFO(this->get_logger(), "No wall detected ahead or left. TURNING SHARP LEFT");
+						prev_robot_pose_ = robot_pose_;
+						turtlebot3_state_num = TB3_SHARP_LEFT;
 					}
 					else {
 						RCLCPP_INFO(this->get_logger(), "Left wall is too far. TURNING LEFT");
@@ -267,12 +265,6 @@ void WallFollower::update_callback()
 					prev_robot_pose_ = robot_pose_;
 					turtlebot3_state_num = TB3_LEFT_TURN;
 				}
-				else if (obstacle_in_front(reverse_threshold))
-				{
-					RCLCPP_INFO(this->get_logger(), "Obstacle in front is very close. REVERSING");
-					prev_robot_pose_ = robot_pose_;
-					turtlebot3_state_num = TB3_REVERSE;
-				} 
 				else 
 				{
 					RCLCPP_INFO(this->get_logger(), "Obstacle in front detected. TURNING SHARP RIGHT");
@@ -372,10 +364,11 @@ bool WallFollower::left_detected(double wall_detection_threshold)
 	);
 }
 
-bool WallFollower::robot_in_empty_space(double empty_space_threshold, double side_obstacle_threshold)
+bool WallFollower::robot_in_empty_space(double empty_space_threshold) 
+//, double side_obstacle_threshold
 {
-	return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold) && (cos(55 * DEG2RAD) * scan_data_[BOTTOM_LEFT] < side_obstacle_threshold));
-	// return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold));
+	// return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold) && (cos(55 * DEG2RAD) * scan_data_[BOTTOM_LEFT] < side_obstacle_threshold));
+	return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold));
 
 }
 

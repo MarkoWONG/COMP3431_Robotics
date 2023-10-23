@@ -52,7 +52,7 @@
 #define TB3_REVERSE       5
 #define TB3_SHARP_LEFT    6
 
-#define PROPORTIONAL_CONSTANT 2.85
+#define PROPORTIONAL_CONSTANT 2.9
 
 class WallFollower : public rclcpp::Node
 {
