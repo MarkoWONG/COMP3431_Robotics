@@ -43,10 +43,12 @@ WallFollower::WallFollower()
 	robot_pose_ = 0.0;
 	prev_robot_pose_ = 0.0;
 
-	LINEAR_VELOCITY = 0.07;
+	LINEAR_VELOCITY = 0.08;
 	ANGULAR_VELOCITY = 0.22;
-	// distFromStartTheshold = 0.25;
-	// leftStart = false;
+	distFromStartTheshold = 2;
+	distFromStartThesholdStop = 0.6;
+	leftStart = false;
+	STOP = false;
 
 	startingX = 3.2;
 	startingY = 43;
@@ -122,9 +124,9 @@ void WallFollower::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 	double distance = sqrt(pow(msg->pose.pose.position.x - startingX, 2) +
 							pow(msg->pose.pose.position.y - startingY, 2));
 	
-	// std::string debugline1 = "distance from the start is: ";
-	// debugline1.append(std::to_string(distance));
-	// RCLCPP_INFO(this->get_logger(), debugline1);
+	std::string debugline1 = "distance from the start is: ";
+	debugline1.append(std::to_string(distance));
+	RCLCPP_INFO(this->get_logger(), debugline1);
 
 	// std::string debugline2 = "x: ";
 	// debugline2.append(std::to_string(msg->pose.pose.position.x));
@@ -137,10 +139,10 @@ void WallFollower::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 		
 		leftStart = true;
 	}
-	else if (leftStart == true){
+	else if (leftStart == true && distance <= distFromStartThesholdStop){
 		RCLCPP_INFO(this->get_logger(), "STOPPING ROBOT");
-		LINEAR_VELOCITY = 0;
-		ANGULAR_VELOCITY = 0;
+		update_cmd_vel(0,0);
+		STOP = true;
 	};
 }
 
@@ -178,11 +180,11 @@ void WallFollower::update_cmd_vel(double linear, double angular)
 void WallFollower::update_callback()
 {
 	static uint8_t turtlebot3_state_num = 0;
-	double escape_range = 0.8 * DEG2RAD; // This is the amount the robot turns before changing states
-	double frontal_obstacle_threshold = 0.31;
-	double side_obstacle_threshold = 0.30;
-	double wall_detection_threshold = 0.33;
-	double empty_space_threshold = 0.3;
+	double escape_range = 1.25 * DEG2RAD; // This is the amount the robot turns before changing states
+	double frontal_obstacle_threshold = 0.35;
+	double side_obstacle_threshold = 0.29;
+	double wall_detection_threshold = 0.32;
+	double empty_space_threshold = 0.34;
 	//double reverse_threshold = 0.1; // if the robot is closer than the reverse threshold, it will reverse to avoid obstacles.
 
 
@@ -191,6 +193,7 @@ void WallFollower::update_callback()
 	// test2.append("command is: ");
 	// test2.append(std::to_string(turtlebot3_state_num));
 	// RCLCPP_INFO(this->get_logger(), test2);
+	if (!STOP){
 	switch (turtlebot3_state_num)
 	{
 		case GET_TB3_DIRECTION:
@@ -291,7 +294,7 @@ void WallFollower::update_callback()
 			}
 			else
 			{
-				update_cmd_vel(LINEAR_VELOCITY, -1 * ANGULAR_VELOCITY * PROPORTIONAL_CONSTANT * deviation);
+				update_cmd_vel(LINEAR_VELOCITY, -1 * (ANGULAR_VELOCITY + 0.26 ) * PROPORTIONAL_CONSTANT * deviation);
 			}
 			break;
 
@@ -303,7 +306,7 @@ void WallFollower::update_callback()
 			else
 			{
 				//To make a sharp right, reduce linear velocity and increase angular velocity
-				update_cmd_vel(0, -1 * (ANGULAR_VELOCITY + 0.14 ));
+				update_cmd_vel(0, -1 * (ANGULAR_VELOCITY + 0.18 ));
 			}
 			break;
 
@@ -334,6 +337,7 @@ void WallFollower::update_callback()
 		default:
 			turtlebot3_state_num = GET_TB3_DIRECTION;
 			break;
+	}
 	}
 }
 
