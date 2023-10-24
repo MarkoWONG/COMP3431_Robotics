@@ -21,5 +21,19 @@
 6. you can click on the level of choice
 7. Place the maze by click on the grid of where you want to place it (make sure to position it so the robot is in the maze)
 
+# Running wall follower on actual robot
+colcon build
+1.  source /opt/ros/foxy/setup.bash
+2.  source install/local_setup.bash
+3.  export TURTLEBOT3_MODEL=waffle_pi
+4.  export ROS_DOMAIN_ID=4
+*Terminal 1
+ssh ubuntu@192.168.1.104
+ros2 launch turtlebot3_bringup robot.launch.py
+*Terminal 2
+ros2 launch turtlebot3_cartographer cartographer.launch.py
+*Terminal 3
+ros2 run wall_follower wall_follower
+
 # Notes
 If your build fails check if there is a empty folder called "launch" in the src/wall_follower/wall_follower. If the folder doesn't exist then create the folder.
