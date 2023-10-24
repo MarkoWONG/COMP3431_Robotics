@@ -26,14 +26,18 @@ colcon build
 1.  source /opt/ros/foxy/setup.bash
 2.  source install/local_setup.bash
 3.  export TURTLEBOT3_MODEL=waffle_pi
-4.  export ROS_DOMAIN_ID=4
-*Terminal 1
-ssh ubuntu@192.168.1.104
-ros2 launch turtlebot3_bringup robot.launch.py
-*Terminal 2
-ros2 launch turtlebot3_cartographer cartographer.launch.py
-*Terminal 3
-ros2 run wall_follower wall_follower
+4.  export ROS_DOMAIN_ID=4\
+**Terminal 1**\
+ssh ubuntu@192.168.1.104\
+ros2 launch turtlebot3_bringup robot.launch.py\
+**Terminal 2**\
+ros2 launch turtlebot3_cartographer cartographer.launch.py\
+**Terminal 3**\
+ros2 run wall_follower wall_follower\\
+
+**After run**\
+ros2 run nav2_map_server map_saver_cli -f ~/{mapName}\
+sudo shutdown now (in ssh terminal)
 
 # Notes
 If your build fails check if there is a empty folder called "launch" in the src/wall_follower/wall_follower. If the folder doesn't exist then create the folder.
