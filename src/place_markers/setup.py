@@ -20,8 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'place_markers = place_markers.webcam_pub:main',
-            'webcam = place_markers.webcam_sub:main',
+            'place_markers = place_markers.place_markers:main',
+            'webcam = place_markers.webcam:main',
         ],
     },
 )

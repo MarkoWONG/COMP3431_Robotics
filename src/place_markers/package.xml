@@ -8,9 +8,11 @@
   <license>TODO: License declaration</license>
 
   <depend>rclpy</depend>
-  <depend>cv2</depend>
+  <depend>image_transport</depend>
   <depend>cv_bridge</depend>
   <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>python3-opencv</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

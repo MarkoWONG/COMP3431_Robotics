@@ -7,11 +7,13 @@
 # Colour segementation and connected components example added by Claude sSammut
   
 # Import the necessary libraries
-import cv2 # OpenCV library
+
 import rclpy # Python library for ROS 2
 from rclpy.node import Node # Handles the creation of nodes
 from sensor_msgs.msg import Image # Image is the message type
+import cv2 # OpenCV library
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
+
 
  
 class ImageSubscriber(Node):
@@ -82,7 +84,7 @@ class ImageSubscriber(Node):
     cv2.waitKey(1)
   
 def main(args=None):
-  
+
   # Initialize the rclpy library
   rclpy.init(args=args)
   
