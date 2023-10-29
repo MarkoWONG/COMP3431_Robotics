@@ -14,7 +14,6 @@ from sensor_msgs.msg import Image # Image is the message type
 import cv2 # OpenCV library
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
 
-
  
 class ImageSubscriber(Node):
   """
@@ -58,6 +57,24 @@ class ImageSubscriber(Node):
     # Mask out everything except pixels in the range light white to dark white
     light_white = (0, 0, 200)
     dark_white = (145, 60, 255)
+
+    #PINK
+    light_pink = (158, 101, 168)
+    dark_pink = (179, 255, 255)
+
+    #GREEN
+    light_green = (78, 0, 60)
+    dark_green = (163, 255, 255)
+
+    #BLUE
+    light_blue = (158, 101, 168)
+    dark_blue = (179, 255, 255)
+
+    #YELLOW
+    light_yellow = (158, 101, 168)
+    dark_yellow = (179, 255, 255)
+
+
     mask = cv2.inRange(hsv_frame, light_white, dark_white)
     result = cv2.bitwise_and(current_frame, current_frame, mask=mask)
 
