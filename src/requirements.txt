@@ -1,0 +1,6 @@
+numpy==1.23.5
+opencv_python==4.6.0.66
+pyquaternion==0.9.9
+pytest==4.6.9
+scipy==1.9.3
+setuptools==45.2.0
