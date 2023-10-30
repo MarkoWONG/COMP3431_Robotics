@@ -13,8 +13,8 @@ dim = (width, height)
 image = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
 
 hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-lower = np.array([78, 0, 60])
-upper = np.array([163, 255, 255])
+lower = np.array([158, 101, 168])
+upper = np.array([179, 255, 255])
 mask = cv2.inRange(hsv, lower, upper)
 result = cv2.bitwise_and(image, image, mask=mask)
 
