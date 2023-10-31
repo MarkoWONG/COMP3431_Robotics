@@ -101,8 +101,8 @@ class ImageSubscriber(Node):
       h = stats[i, cv2.CC_STAT_HEIGHT]
       area = stats[i, cv2.CC_STAT_AREA]
         
-      #If the area of the blob is more than 150 pixels:
-      if area < 150:
+      #If the area of the blob is more than 250 pixels:
+      if area > 250:
         print("Found a blue object")
         print(x, y, w, h, area)
         self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
@@ -131,8 +131,8 @@ class ImageSubscriber(Node):
       h = stats[i, cv2.CC_STAT_HEIGHT]
       area = stats[i, cv2.CC_STAT_AREA]
         
-      #If the area of the blob is more than 150 pixels:
-      if area < 150:
+      #If the area of the blob is more than 250 pixels:
+      if area > 250:
         print("Found a green object")
         print(x, y, w, h, area)
         self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
@@ -161,8 +161,8 @@ class ImageSubscriber(Node):
       h = stats[i, cv2.CC_STAT_HEIGHT]
       area = stats[i, cv2.CC_STAT_AREA]
         
-      #If the area of the blob is more than 150 pixels:
-      if area < 150:
+      #If the area of the blob is more than 250 pixels:
+      if area > 250:
         print("Found a yellow object")
         print(x, y, w, h, area)
         self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
