@@ -51,12 +51,14 @@ class ImageSubscriber(Node):
  
     # Convert ROS Image message to OpenCV image
     current_frame = self.br.imgmsg_to_cv2(data)
+    current_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2RGB)
 
     # The following code is a simple example of colour segmentation
     # and connected components analysis
     
     # Convert BGR image to HSV
     hsv_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2HSV)
+    
     
     # #PINK
     # light_pink = (158, 101, 168)
@@ -104,7 +106,9 @@ class ImageSubscriber(Node):
       #If the area of the blob is more than 250 pixels:
       if area > 250:
         print("Found a blue object")
-        print(x, y, w, h, area)
+        (cX, cY) = centroids[i]
+        print(x, y, w, h, area, f"{cX}, {cY}")
+        
         self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
   
   def find_green_objects(self, hsv_frame, current_frame):
