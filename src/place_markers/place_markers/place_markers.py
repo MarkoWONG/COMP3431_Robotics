@@ -79,8 +79,8 @@ class ImageSubscriber(Node):
 
   def find_blue_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not blue
-    light_blue = (87, 62, 30)
-    dark_blue = (140, 255, 255)
+    light_blue = (100, 50, 30)
+    dark_blue = (130, 255, 255)
     blue_mask = cv2.inRange(hsv_frame, light_blue, dark_blue)
     result = cv2.bitwise_and(current_frame, current_frame, mask=blue_mask)
 
@@ -109,8 +109,8 @@ class ImageSubscriber(Node):
   
   def find_green_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not green
-    light_green = (43, 44, 30)
-    dark_green = (87, 255, 255)
+    light_green = (40, 65, 30)
+    dark_green = (90, 255, 255)
     green_mask = cv2.inRange(hsv_frame, light_green, dark_green)
     result = cv2.bitwise_and(current_frame, current_frame, mask=green_mask)
     
@@ -139,8 +139,8 @@ class ImageSubscriber(Node):
 
   def find_yellow_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not yellow
-    light_yellow = (20, 84, 30)
-    dark_yellow = (41, 255, 255)
+    light_yellow = (20, 61, 30)
+    dark_yellow = (35, 255, 255)
     yellow_mask = cv2.inRange(hsv_frame, light_yellow, dark_yellow)
     result = cv2.bitwise_and(current_frame, current_frame, mask=yellow_mask)
 
