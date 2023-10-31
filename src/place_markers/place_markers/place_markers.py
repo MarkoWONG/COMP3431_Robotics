@@ -83,6 +83,7 @@ class ImageSubscriber(Node):
     # Filter out everything that is not blue
     light_blue = (100, 50, 30)
     dark_blue = (105, 255, 255)
+    
     blue_mask = cv2.inRange(hsv_frame, light_blue, dark_blue)
     result = cv2.bitwise_and(current_frame, current_frame, mask=blue_mask)
 
