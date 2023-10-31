@@ -172,6 +172,10 @@ class ImageSubscriber(Node):
         print(x, y, w, h, area)
         self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
 
+  # def distMarkerToRobot(self, marker_width):
+  #   width_diff = marker_width - 
+
+
 def main(args=None):
 
   # Initialize the rclpy library
