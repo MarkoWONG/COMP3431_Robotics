@@ -79,13 +79,16 @@ class ImageSubscriber(Node):
 
   def find_blue_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not blue
-    light_blue = (87, 62, 0)
+    light_blue = (87, 62, 30)
     dark_blue = (140, 255, 255)
     blue_mask = cv2.inRange(hsv_frame, light_blue, dark_blue)
     result = cv2.bitwise_and(current_frame, current_frame, mask=blue_mask)
 
+    cv2.namedWindow("blue_mask")
+    cv2.imshow("blue_mask", blue_mask)
+
     # Run 4-way connected components, with statistics
-    output = cv2.connectedComponentsWithStats(result, 4, cv2.CV_32S)
+    output = cv2.connectedComponentsWithStats(blue_mask, 4, cv2.CV_32S)
     (numLabels, labels, stats, centroids) = output
  
     # Print statistics for each blob (connected component)
@@ -106,13 +109,16 @@ class ImageSubscriber(Node):
   
   def find_green_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not green
-    light_green = (43, 44, 0)
+    light_green = (43, 44, 30)
     dark_green = (87, 255, 255)
     green_mask = cv2.inRange(hsv_frame, light_green, dark_green)
     result = cv2.bitwise_and(current_frame, current_frame, mask=green_mask)
     
+    cv2.namedWindow("green_mask")
+    cv2.imshow("green_mask", green_mask)
+
     # Run 4-way connected components, with statistics
-    output = cv2.connectedComponentsWithStats(result, 4, cv2.CV_32S)
+    output = cv2.connectedComponentsWithStats(green_mask, 4, cv2.CV_32S)
     (numLabels, labels, stats, centroids) = output
  
     # Print statistics for each blob (connected component)
@@ -133,13 +139,16 @@ class ImageSubscriber(Node):
 
   def find_yellow_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not yellow
-    light_yellow = (20, 84, 0)
+    light_yellow = (20, 84, 30)
     dark_yellow = (41, 255, 255)
     yellow_mask = cv2.inRange(hsv_frame, light_yellow, dark_yellow)
     result = cv2.bitwise_and(current_frame, current_frame, mask=yellow_mask)
 
+    cv2.namedWindow("yellow_mask")
+    cv2.imshow("yellow_mask", yellow_mask)
+
     # Run 4-way connected components, with statistics
-    output = cv2.connectedComponentsWithStats(result, 4, cv2.CV_32S)
+    output = cv2.connectedComponentsWithStats(yellow_mask, 4, cv2.CV_32S)
     (numLabels, labels, stats, centroids) = output
  
     # Print statistics for each blob (connected component)
