@@ -7,7 +7,7 @@ def nothing(x):
     pass
 
 # Load image
-image = cv2.imread('markers.JPG')
+image = cv2.imread('pink_yellow2.JPG')
 
 scale_percent = 20 # percent of original size
 width = int(image.shape[1] * scale_percent / 100)
