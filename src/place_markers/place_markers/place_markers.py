@@ -41,6 +41,13 @@ class ImageSubscriber(Node):
 
     #For storing objects detected by the robot's camera
     self.detected_objects = [] 
+
+    # position listener
+    self.qos = rclpy.qos.QoSProfile(
+        reliability=rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+        history=rclpy.qos.QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+        depth=1
+    )
    
   def listener_callback(self, data):
     """
