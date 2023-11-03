@@ -9,11 +9,18 @@
 # Import the necessary libraries
 
 import rclpy # Python library for ROS 2
+import rclpy.qos
+from pyquaternion import Quaternion
 from rclpy.node import Node # Handles the creation of nodes
 from sensor_msgs.msg import Image # Image is the message type
+
 import cv2 # OpenCV library
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
+import numpy as np
+import math
 
+from tf2_ros.buffer import Buffer
+from visualization_msgs.msg import Marker, MarkerArray
  
 class ImageSubscriber(Node):
   """
@@ -25,6 +32,9 @@ class ImageSubscriber(Node):
     """
     # Initiate the Node class's constructor and give it a name
     super().__init__('image_subscriber')
+
+    self.marker_list = MarkerArray();
+    self.marker_list.marker = [];
       
     # Create the subscriber. This subscriber will receive an Image
     # from the video_frames topic. The queue size is 10 messages.
@@ -40,7 +50,8 @@ class ImageSubscriber(Node):
     self.br = CvBridge()
 
     #For storing objects detected by the robot's camera
-    self.detected_objects = [] 
+    self.detected_objects = [];
+    self.image_size = None;
 
     # position listener
     self.qos = rclpy.qos.QoSProfile(
@@ -48,6 +59,12 @@ class ImageSubscriber(Node):
         history=rclpy.qos.QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
         depth=1
     )
+
+    # transform lisnter
+    self.tf_buffer = Buffer()
+    self.tf_listener = TransformListener(self.tf_buffer, self)
+    self.plot_publisher = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
+  
    
   def listener_callback(self, data):
     """
@@ -65,7 +82,9 @@ class ImageSubscriber(Node):
     
     # Convert BGR image to HSV
     hsv_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2HSV)
-    
+    self.image_size = hsv_frame.shape;
+
+    self.calcDistanceAndPublish()
     
     # #PINK
     # light_pink = (158, 101, 168)
@@ -85,6 +104,76 @@ class ImageSubscriber(Node):
     
     cv2.waitKey(1)
 
+  def calcDistanceAndPublish(self):
+    if len(self.detected_objects) == 0: 
+      return 
+
+    robot_currX = 0;
+    robot_currY = 0;
+    robot_currZ = 0;
+    
+    object = self.detected_object[0];
+    object_heigh = object.h;
+    object_width = object.w;
+    object_fromLeft = object.x;
+    object_fromTop = object.y;
+    object_area = object.area;
+    object_centroid = object.centroid;
+
+    dist_objectToMarker = self.distMarkerToCamera(object_height);
+    object_realHeight = 200;
+    object_pixelHeight = object_height * 0.2646;
+
+    real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker;
+    rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0;
+    real_xToCenter = object_realHeight / object_pixelHeight * rel_xToCenter
+    
+    cylinder_absX = robot_currX + real_xToCenter;
+    cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
+    cylinder_absZ = 0;
+
+    self.add_new_point([cylinder_absX, cylinder_absY, cylinder_absZ])
+  
+  def generate_marker(self, coordinate):
+    # down cylinder
+    marker = Marker()
+    # marker.header.frame_id = "map"
+    marker.header.frame_id = "/map"
+    marker.id = len(self.marker_list.markers) + 1
+    marker.type = marker.CYLINDER
+    marker.action = marker.ADD
+    marker.pose.orientation.x = 0.0
+    marker.pose.orientation.y = 0.0
+    marker.pose.orientation.z = 0.0
+    marker.pose.orientation.w = 1.0
+    marker.pose.position.x = float(coordinate[0])
+    marker.pose.position.y = float(coordinate[1])
+    marker.pose.position.z = float(coordinate[2]) + 0.1
+    marker.scale.x = 0.14
+    marker.scale.y = 0.14
+    marker.scale.z = 0.2
+    marker.color.a = 1.0
+    if special_color_up != True:
+      rgb = (255,192,203)
+    elif color == self.YELLOW:
+      rgb = (255,234,0)
+    elif color == self.BLUE:
+      rgb = (0,191,255)
+    else:
+      rgb = (0,100,0)
+    marker.color.r = rgb[0] / 255.0
+    marker.color.g = rgb[1] / 255.0
+    marker.color.b = rgb[2] / 255.0
+    self.marker_list.markers.append(marker)
+
+  def add_new_point(self, coordinate):
+    coordinate[0] = float(coordinate[0])
+    coordinate[1] = float(coordinate[1])
+    coordinate[2] = float(coordinate[2])
+    ## print("add_new_point2")
+    self.generate_marker(coordinate)
+    print(f"-----------Current length{len(self.marker_list.markers)}----------")
+    self.plot_publisher.publish(self.marker_list)
 
   def find_blue_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not blue
@@ -179,9 +268,20 @@ class ImageSubscriber(Node):
         print(x, y, w, h, area)
         self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
 
-  # def distMarkerToRobot(self, marker_width):
-  #   width_diff = marker_width - 
-
+def showDistance(self, marker_height):
+    if (marker_height >= 15 and marker_height <= 65):
+      print(f'Distance to marker is {self.distMarkerToCamera(marker_height)}')
+    else:
+      print(f"Too close or far to marker, Distance won't be accurate. Distance is less than 200mm or greater than 500mm")
+      
+  def distMarkerToCamera(self, marker_height):
+    # Quadratic regression equation distance = a*x^2 + b*x + c
+    a = 0.192229
+    b = -23.8783
+    c = 941.638
+    distance = (a*(marker_height**2)) - (b*marker_height) + c 
+    showDistance(marker_height)
+    return distance
 
 def main(args=None):
 
