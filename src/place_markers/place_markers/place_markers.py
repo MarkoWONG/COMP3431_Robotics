@@ -111,6 +111,7 @@ class ImageSubscriber(Node):
         print(x, y, w, h, area, f"{cX}, {cY}")
         
         self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        self.showDistance(h)
   
   def find_green_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not green
@@ -141,6 +142,7 @@ class ImageSubscriber(Node):
         print("Found a green object")
         print(x, y, w, h, area)
         self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        self.showDistance(h)
 
   def find_yellow_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not yellow
@@ -171,9 +173,20 @@ class ImageSubscriber(Node):
         print("Found a yellow object")
         print(x, y, w, h, area)
         self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        self.showDistance(h)
 
-  # def distMarkerToRobot(self, marker_width):
-  #   width_diff = marker_width - 
+  def showDistance(self, marker_height):
+    if (marker_height >= 15 and marker_height <= 65):
+      print(f'Distance to marker is {self.distMarkerToCamera(marker_height)}')
+    else:
+      print(f"Too close or far to marker, Distance won't be accurate. Distance is less than 200mm or greater than 500mm")
+      
+  def distMarkerToCamera(self, marker_height):
+    # Quadratic regression equation distance = a*x^2 + b*x + c
+    a = 0.192229
+    b = -23.8783
+    c = 941.638
+    return (a*(marker_height**2)) - (b*marker_height) + c 
 
 
 def main(args=None):
