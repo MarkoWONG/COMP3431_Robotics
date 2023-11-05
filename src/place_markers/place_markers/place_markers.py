@@ -59,12 +59,6 @@ class ImageSubscriber(Node):
     # Convert BGR image to HSV
     hsv_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2HSV)
     
-    
-    # #PINK
-    # light_pink = (158, 101, 168)
-    # dark_pink = (179, 255, 255)
-    # pink_mask = cv2.inRange(hsv_frame, light_pink, dark_pink)
-
     #We only need to worry about blue, green and yellow because all the markers are half pink
     self.find_blue_objects(hsv_frame, current_frame)
     self.find_green_objects(hsv_frame, current_frame)
@@ -80,18 +74,31 @@ class ImageSubscriber(Node):
 
 
   def find_blue_objects(self, hsv_frame, current_frame):
-    # Filter out everything that is not blue
+    # Filter out everything that is not blue or pink
     light_blue = (100, 50, 30)
     dark_blue = (105, 255, 255)
     
     blue_mask = cv2.inRange(hsv_frame, light_blue, dark_blue)
     result = cv2.bitwise_and(current_frame, current_frame, mask=blue_mask)
 
+    light_pink = (158, 101, 168)
+    dark_pink = (179, 255, 255)
+    pink_mask = cv2.inRange(hsv_frame, light_pink, dark_pink)
+    result = cv2.bitwise_and(current_frame, current_frame, mask=pink_mask)
+    
+    blue_pink_mask = cv2.bitwise_or(blue_mask, pink_mask)
+
     cv2.namedWindow("blue_mask")
     cv2.imshow("blue_mask", blue_mask)
 
-    # Run 4-way connected components, with statistics
-    output = cv2.connectedComponentsWithStats(blue_mask, 4, cv2.CV_32S)
+    cv2.namedWindow("pink_mask")
+    cv2.imshow("pink_mask", pink_mask)
+
+    cv2.namedWindow("blue_pink_mask")
+    cv2.imshow("blue_pink_mask", blue_pink_mask)
+  
+    # Run 4-way connected components, with statistics for blue+pink objects
+    output = cv2.connectedComponentsWithStats(blue_pink_mask, 4, cv2.CV_32S)
     (numLabels, labels, stats, centroids) = output
  
     # Print statistics for each blob (connected component)
@@ -106,11 +113,24 @@ class ImageSubscriber(Node):
         
       #If the area of the blob is more than 250 pixels:
       if area > 250:
-        print("Found a blue object")
-        (cX, cY) = centroids[i]
-        print(x, y, w, h, area, f"{cX}, {cY}")
+        (centroid_x1, centroid_y1) = centroids[i]
         
-        self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        #look for a pink object above the blue object
+        output2 = cv2.connectedComponentsWithStats(pink_mask, 4, cv2.CV_32S)
+        (numLabels2, labels2, stats2, centroids2) = output2
+        
+        for j in range(1, numLabels2):
+          (centroid_x2, centroid_y2) = centroids2[j]
+
+          #check that x coordinate of the centroid of the pink blob is within +/- 10% of the x coordinate of the blue blob
+          if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
+            pink_on_top = False
+            #check that the the pink blob is on top of the blue blob
+            if (centroid_y2 <= centroid_y1): 
+              pink_on_top = True
+          print(f"colour: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+        
+        # self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
   
   def find_green_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not green
@@ -119,11 +139,21 @@ class ImageSubscriber(Node):
     green_mask = cv2.inRange(hsv_frame, light_green, dark_green)
     result = cv2.bitwise_and(current_frame, current_frame, mask=green_mask)
     
+    light_pink = (158, 101, 168)
+    dark_pink = (179, 255, 255)
+    pink_mask = cv2.inRange(hsv_frame, light_pink, dark_pink)
+    result = cv2.bitwise_and(current_frame, current_frame, mask=pink_mask)
+    
+    green_pink_mask = cv2.bitwise_or(green_mask, pink_mask)
+
     cv2.namedWindow("green_mask")
     cv2.imshow("green_mask", green_mask)
 
-    # Run 4-way connected components, with statistics
-    output = cv2.connectedComponentsWithStats(green_mask, 4, cv2.CV_32S)
+    cv2.namedWindow("green_pink_mask")
+    cv2.imshow("green_pink_mask", green_pink_mask)
+
+    # Run 4-way connected components, with statistics for blue+pink objects
+    output = cv2.connectedComponentsWithStats(green_pink_mask, 4, cv2.CV_32S)
     (numLabels, labels, stats, centroids) = output
  
     # Print statistics for each blob (connected component)
@@ -138,9 +168,23 @@ class ImageSubscriber(Node):
         
       #If the area of the blob is more than 250 pixels:
       if area > 250:
-        print("Found a green object")
-        print(x, y, w, h, area)
-        self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        (centroid_x1, centroid_y1) = centroids[i]
+        
+        #look for a pink object above the blue object
+        output2 = cv2.connectedComponentsWithStats(pink_mask, 4, cv2.CV_32S)
+        (numLabels2, labels2, stats2, centroids2) = output2
+        
+        for j in range(1, numLabels2):
+          (centroid_x2, centroid_y2) = centroids2[j]
+
+          #check that x coordinate of the centroid of the pink blob is within +/- 10% of the x coordinate of the blue blob
+          if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
+            pink_on_top = False
+            #check that the the pink blob is on top of the blue blob
+            if (centroid_y2 <= centroid_y1): 
+              pink_on_top = True
+          print(f"colour: green, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+
 
   def find_yellow_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not yellow
@@ -149,11 +193,21 @@ class ImageSubscriber(Node):
     yellow_mask = cv2.inRange(hsv_frame, light_yellow, dark_yellow)
     result = cv2.bitwise_and(current_frame, current_frame, mask=yellow_mask)
 
+    light_pink = (158, 101, 168)
+    dark_pink = (179, 255, 255)
+    pink_mask = cv2.inRange(hsv_frame, light_pink, dark_pink)
+    result = cv2.bitwise_and(current_frame, current_frame, mask=pink_mask)
+    
+    yellow_pink_mask = cv2.bitwise_or(yellow_mask, pink_mask)
+
     cv2.namedWindow("yellow_mask")
     cv2.imshow("yellow_mask", yellow_mask)
 
-    # Run 4-way connected components, with statistics
-    output = cv2.connectedComponentsWithStats(yellow_mask, 4, cv2.CV_32S)
+    cv2.namedWindow("yellow_pink_mask")
+    cv2.imshow("yellow_pink_mask", yellow_pink_mask)
+  
+    # Run 4-way connected components, with statistics for yellow+pink objects
+    output = cv2.connectedComponentsWithStats(yellow_pink_mask, 4, cv2.CV_32S)
     (numLabels, labels, stats, centroids) = output
  
     # Print statistics for each blob (connected component)
@@ -168,9 +222,22 @@ class ImageSubscriber(Node):
         
       #If the area of the blob is more than 250 pixels:
       if area > 250:
-        print("Found a yellow object")
-        print(x, y, w, h, area)
-        self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        (centroid_x1, centroid_y1) = centroids[i]
+        
+        #look for a pink object above the blue object
+        output2 = cv2.connectedComponentsWithStats(pink_mask, 4, cv2.CV_32S)
+        (numLabels2, labels2, stats2, centroids2) = output2
+        
+        for j in range(1, numLabels2):
+          (centroid_x2, centroid_y2) = centroids2[j]
+
+          #check that x coordinate of the centroid of the pink blob is within +/- 10% of the x coordinate of the blue blob
+          if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
+            pink_on_top = False
+            #check that the the pink blob is on top of the blue blob
+            if (centroid_y2 <= centroid_y1): 
+              pink_on_top = True
+          print(f"colour: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
 
   # def distMarkerToRobot(self, marker_width):
   #   width_diff = marker_width - 
