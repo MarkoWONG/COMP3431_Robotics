@@ -108,6 +108,22 @@ class ImageSubscriber(Node):
     
     cv2.waitKey(1)
 
+  def check_existing_markers(self, point, new_color):
+    for marker in self.marker_list.markers:
+      if math.sqrt((point[0] - marker.pose.position.x)**2 + \
+        (point[1] - marker.pose.position.y)**2) <= 0.5:
+        r = marker.color.r * 255
+        g = marker.color.g * 255
+        b = marker.color.b * 255
+        
+        if new_color == self.BLUE and abs(r) <= 0.1 and abs(g - 191) <= 0.1 and abs(b - 255) < 0.1:
+          return True
+        elif new_color == self.YELLOW and abs(r - 255) <= 0.1 and abs(g - 234) <= 0.1 and abs(b) < 0.1:
+          return True
+        elif new_color == self.GREEN and abs(r) <= 0.1 and abs(g - 100) <= 0.1 and abs(b) < 0.1:
+          return True
+    return False
+
   def transform_frame(self, target, source , translation, quaternion):
       try:
         transform = self.tf_buffer.lookup_transform(target_frame=target, source_frame=source, time=rclpy.time.Time()).transform
@@ -202,6 +218,8 @@ class ImageSubscriber(Node):
     coordinate[0] = float(coordinate[0])
     coordinate[1] = float(coordinate[1])
     coordinate[2] = float(coordinate[2])
+    if self.check_existing_markers(coordinate, color):
+      return
     ## print("add_new_point2")
     self.generate_marker(coordinate, color)
     print(f"-----------Current length{len(self.marker_list.markers)}----------")
