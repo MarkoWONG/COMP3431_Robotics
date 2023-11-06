@@ -273,7 +273,7 @@ class ImageSubscriber(Node):
         print(x, y, w, h, area)
         self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i], "color": self.YELLOW})
 
-def showDistance(self, marker_height):
+  def showDistance(self, marker_height):
     if (marker_height >= 15 and marker_height <= 65):
       print(f'Distance to marker is {self.distMarkerToCamera(marker_height)}')
     else:
