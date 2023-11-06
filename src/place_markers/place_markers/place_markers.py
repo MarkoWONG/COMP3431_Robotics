@@ -23,6 +23,10 @@ from tf2_ros.buffer import Buffer
 from visualization_msgs.msg import Marker, MarkerArray
  
 class ImageSubscriber(Node):
+  PINK = 0
+  BLUE = 1
+  GREEN = 2
+  YELLOW = 3
   """
   Create an ImageSubscriber class, which is a subclass of the Node class.
   """
@@ -112,13 +116,14 @@ class ImageSubscriber(Node):
     robot_currY = 0;
     robot_currZ = 0;
     
-    object = self.detected_object[0];
-    object_heigh = object.h;
+    object = self.detected_objects[0];
+    object_height = object.h;
     object_width = object.w;
     object_fromLeft = object.x;
     object_fromTop = object.y;
     object_area = object.area;
     object_centroid = object.centroid;
+    object_color = object.color;
 
     dist_objectToMarker = self.distMarkerToCamera(object_height);
     object_realHeight = 200;
@@ -132,9 +137,9 @@ class ImageSubscriber(Node):
     cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
     cylinder_absZ = 0;
 
-    self.add_new_point([cylinder_absX, cylinder_absY, cylinder_absZ])
+    self.add_new_point([cylinder_absX, cylinder_absY, cylinder_absZ], object_color)
   
-  def generate_marker(self, coordinate):
+  def generate_marker(self, coordinate, color):
     # down cylinder
     marker = Marker()
     # marker.header.frame_id = "map"
@@ -166,12 +171,12 @@ class ImageSubscriber(Node):
     marker.color.b = rgb[2] / 255.0
     self.marker_list.markers.append(marker)
 
-  def add_new_point(self, coordinate):
+  def add_new_point(self, coordinate, color):
     coordinate[0] = float(coordinate[0])
     coordinate[1] = float(coordinate[1])
     coordinate[2] = float(coordinate[2])
     ## print("add_new_point2")
-    self.generate_marker(coordinate)
+    self.generate_marker(coordinate, color)
     print(f"-----------Current length{len(self.marker_list.markers)}----------")
     self.plot_publisher.publish(self.marker_list)
 
@@ -206,7 +211,7 @@ class ImageSubscriber(Node):
         (cX, cY) = centroids[i]
         print(x, y, w, h, area, f"{cX}, {cY}")
         
-        self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i], "color": self.BLUE})
   
   def find_green_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not green
@@ -236,7 +241,7 @@ class ImageSubscriber(Node):
       if area > 250:
         print("Found a green object")
         print(x, y, w, h, area)
-        self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i], "color": self.GREEN})
 
   def find_yellow_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not yellow
@@ -266,7 +271,7 @@ class ImageSubscriber(Node):
       if area > 250:
         print("Found a yellow object")
         print(x, y, w, h, area)
-        self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i], "color": self.YELLOW})
 
 def showDistance(self, marker_height):
     if (marker_height >= 15 and marker_height <= 65):
