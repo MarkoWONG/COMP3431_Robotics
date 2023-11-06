@@ -108,6 +108,20 @@ class ImageSubscriber(Node):
     
     cv2.waitKey(1)
 
+  def transform_frame(self, target, source , translation, quaternion):
+      try:
+        transform = self.tf_buffer.lookup_transform(target_frame=target, source_frame=source, time=rclpy.time.Time()).transform
+        translation[0] = translation[0] + transform.translation.x
+        translation[1] = translation[1] + transform.translation.y
+        translation[2] = translation[2] + transform.translation.z
+        quaternion[0] = transform.rotation.w
+        quaternion[1] = quaternion[1] + transform.rotation.x
+        quaternion[2] = quaternion[2] + transform.rotation.y
+        quaternion[3] = quaternion[3] + transform.rotation.z
+        return (translation, quaternion)
+      except Exception:
+        return ([0],[0])
+
   def calcDistanceAndPublish(self):
     if len(self.detected_objects) == 0: 
       return 
@@ -136,6 +150,19 @@ class ImageSubscriber(Node):
     cylinder_absX = robot_currX + real_xToCenter;
     cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
     cylinder_absZ = 0;
+    obj_in_cam[0] = cylinder_absX;
+    obj_in_cam[1] = cylinder_absY;
+    
+    translation = [0,0,0]
+    quaternion = [1,0,0,0]
+    translation, quaternion = self.transform_frame("map", "camera_link", translation, quaternion)
+
+    my_quater = Quaternion(quaternion[0], quaternion[1], quaternion[2],quaternion[3])
+    rotation = my_quater.rotate(obj_in_cam)
+    final_coordinate = [0,0,0]
+    final_coordinate[0] = rotation[0] + translation[0]
+    final_coordinate[1] = rotation[1] + translation[1]
+    final_coordinate[2] = rotation[2] + translation[2]
 
     self.add_new_point([cylinder_absX, cylinder_absY, cylinder_absZ], object_color)
   
