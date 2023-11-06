@@ -180,7 +180,7 @@ class ImageSubscriber(Node):
     final_coordinate[1] = rotation[1] + translation[1]
     final_coordinate[2] = rotation[2] + translation[2]
 
-    self.add_new_point([cylinder_absX, cylinder_absY, cylinder_absZ], object_color)
+    self.add_new_point(final_coordinate, object_color)
   
   def generate_marker(self, coordinate, color):
     # down cylinder
