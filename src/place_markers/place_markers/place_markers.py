@@ -4,7 +4,7 @@
 # - Addison Sears-Collins
 # - https://automaticaddison.com
 
-# Colour segementation and connected components example added by Claude sSammut
+# color segementation and connected components example added by Claude sSammut
   
 # Import the necessary libraries
 
@@ -29,8 +29,8 @@ class ImageSubscriber(Node):
   BLUE = 1
   GREEN = 2
   YELLOW = 3
-  MAX_AREA_DETECTION_THRESHOLD = 400
-  MIN_AREA_DETECTION_THRESHOLD = 250
+  MAX_AREA_DETECTION_THRESHOLD = 800
+  MIN_AREA_DETECTION_THRESHOLD = 375
   """
   Create an ImageSubscriber class, which is a subclass of the Node class.
   """
@@ -41,8 +41,8 @@ class ImageSubscriber(Node):
     # Initiate the Node class's constructor and give it a name
     super().__init__('image_subscriber')
 
-    self.marker_list = MarkerArray();
-    self.marker_list.markers = [];
+    self.marker_list = MarkerArray()
+    self.marker_list.markers = []
       
     # Create the subscriber. This subscriber will receive an Image
     # from the video_frames topic. The queue size is 10 messages.
@@ -58,8 +58,8 @@ class ImageSubscriber(Node):
     self.br = CvBridge()
 
     #For storing objects detected by the robot's camera
-    self.detected_objects = [];
-    self.image_size = None;
+    self.detected_objects = []
+    self.image_size = None
 
     # position listener
     self.qos = rclpy.qos.QoSProfile(
@@ -71,13 +71,12 @@ class ImageSubscriber(Node):
     # transform lisnter
     self.tf_buffer = Buffer()
     self.tf_listener = TransformListener(self.tf_buffer, self)
+
+    # Create publisher
     self.plot_publisher = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
 
-
+  # What to do when recieving a image from camera
   def listener_callback(self, data):
-    """
-    Callback function.
-    """
     self.detected_objects = []
     
     # Display the message on the console
@@ -89,6 +88,7 @@ class ImageSubscriber(Node):
 
     # Convert BGR image to HSV
     hsv_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2HSV)
+    self.image_size = hsv_frame.shape
     
     #We only need to worry about blue, green and yellow because all the markers are half pink
     self.detect_objects(hsv_frame, current_frame)
@@ -104,8 +104,10 @@ class ImageSubscriber(Node):
 
   def detect_objects(self, hsv_frame, current_frame):
     
+
     light_pink = (158, 101, 168)
     dark_pink = (179, 255, 255)
+
     pink_mask = cv2.inRange(hsv_frame, light_pink, dark_pink)
     result = cv2.bitwise_and(current_frame, current_frame, mask=pink_mask)
 
@@ -168,6 +170,7 @@ class ImageSubscriber(Node):
           print(f"colour: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, blue_mask, self.BLUE, pink_on_top)
 
+
         #Check for yellow objects
         for j in range(1, numLabelsY):
           (centroid_x2, centroid_y2) = centroidsY[j]
@@ -186,6 +189,7 @@ class ImageSubscriber(Node):
         #Check for green objects
         for j in range(1, numLabelsG):
           (centroid_x2, centroid_y2) = centroidsG[j]
+
 
           if (not (area <= 1.2 * statsG[j, cv2.CC_STAT_AREA] and area >= 0.8 * statsG[j, cv2.CC_STAT_AREA])):
             continue
@@ -217,6 +221,7 @@ class ImageSubscriber(Node):
       #If the area of the blob is more than 250 pixels:
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         self.detected_objects.append({"colour": colour, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+
 
   def check_existing_markers(self, point, new_color):
     for marker in self.marker_list.markers:
@@ -252,19 +257,19 @@ class ImageSubscriber(Node):
     if len(self.detected_objects) == 0: 
       return 
 
-    robot_currX = 0;
-    robot_currY = 0;
-    robot_currZ = 0;
+    robot_currX = 0
+    robot_currY = 0
+    robot_currZ = 0
     
     object = self.detected_objects[0]
-    object_height = object.h
-    object_width = object.w
-    object_fromLeft = object.x
-    object_fromTop = object.y
-    object_area = object.area
-    object_centroid = object.centroid
-    object_color = object.color
-    pink_on_top = object.pink_on_top
+    object_height = object["h"]
+    object_width = object["w"]
+    object_fromLeft = object["x"]
+    object_fromTop = object["y"]
+    object_area = object["area"]
+    object_centroid = object["centroid"]
+    object_color = object["color"]
+    pink_on_top = object["pink_on_top"]
 
     dist_objectToMarker = self.distMarkerToCamera(object_height)
     object_realHeight = 200
@@ -277,11 +282,14 @@ class ImageSubscriber(Node):
     cylinder_absX = robot_currX + real_xToCenter
     cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
     cylinder_absZ = 0
-    obj_in_cam = (cylinder_absX, cylinder_absY)
     
+    # obj_in_cam = [cylinder_absX, cylinder_absY, 0]
+    obj_in_cam = [0, 0, 0]
     translation = [0,0,0]
     quaternion = [1,0,0,0]
     translation, quaternion = self.transform_frame("map", "camera_link", translation, quaternion)
+    if (len(translation) != 3):
+      return
 
     my_quater = Quaternion(quaternion[0], quaternion[1], quaternion[2],quaternion[3])
     rotation = my_quater.rotate(obj_in_cam)
@@ -347,7 +355,7 @@ class ImageSubscriber(Node):
     b = -0.316
     c = 167
     distance = (a*(marker_height**2)) - (b*marker_height) + c 
-    self.showDistance(marker_height)
+    # self.showDistance(marker_height)
     return distance
 
 
