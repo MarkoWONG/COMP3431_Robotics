@@ -269,18 +269,21 @@ class ImageSubscriber(Node):
 
     dist_objectToMarker = self.distMarkerToCamera(object_height)
     object_realHeight = 200
-    object_pixelHeight = object_height * 0.2646
+    # object_pixelHeight = object_height * 0.2646
+    similarTriangleRatio = object_realHeight / object_height
 
-    real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker
+    # real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker
+    real_distance = dist_objectToMarker # * similarTriangleRatio
     rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0
     real_xToCenter = object_realHeight / object_pixelHeight * rel_xToCenter
     
-    cylinder_absX = robot_currX + real_xToCenter
+    # cylinder_absX = robot_currX + real_xToCenter
+    cylinder_absX = rel_xToCenter * similarTriangleRatio
     cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
     cylinder_absZ = 0
     
-    # obj_in_cam = [cylinder_absX, cylinder_absY, 0]
-    obj_in_cam = [0, 0, 0]
+    obj_in_cam = [cylinder_absY, cylinder_absX, 0]
+    # obj_in_cam = [0, 0, 0]
     translation = [0,0,0]
     quaternion = [1,0,0,0]
     translation, quaternion = self.transform_frame("map", "camera_link", translation, quaternion)
