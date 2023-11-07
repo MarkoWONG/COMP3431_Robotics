@@ -41,8 +41,8 @@ class ImageSubscriber(Node):
     # Initiate the Node class's constructor and give it a name
     super().__init__('image_subscriber')
 
-    self.marker_list = MarkerArray();
-    self.marker_list.markers = [];
+    self.marker_list = MarkerArray()
+    self.marker_list.markers = []
       
     # Create the subscriber. This subscriber will receive an Image
     # from the video_frames topic. The queue size is 10 messages.
@@ -58,8 +58,8 @@ class ImageSubscriber(Node):
     self.br = CvBridge()
 
     #For storing objects detected by the robot's camera
-    self.detected_objects = [];
-    self.image_size = None;
+    self.detected_objects = []
+    self.image_size = None
 
     # position listener
     self.qos = rclpy.qos.QoSProfile(
@@ -71,13 +71,12 @@ class ImageSubscriber(Node):
     # transform lisnter
     self.tf_buffer = Buffer()
     self.tf_listener = TransformListener(self.tf_buffer, self)
+
+    # Create publisher
     self.plot_publisher = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
 
-
+  # What to do when recieving a image from camera
   def listener_callback(self, data):
-    """
-    Callback function.
-    """
     self.detected_objects = []
     
     # Display the message on the console
@@ -317,9 +316,9 @@ class ImageSubscriber(Node):
     if len(self.detected_objects) == 0: 
       return 
 
-    robot_currX = 0;
-    robot_currY = 0;
-    robot_currZ = 0;
+    robot_currX = 0
+    robot_currY = 0
+    robot_currZ = 0
     
     object = self.detected_objects[0]
     object_height = object["h"]
