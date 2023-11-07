@@ -38,8 +38,8 @@ class ImageSubscriber(Node):
     # Initiate the Node class's constructor and give it a name
     super().__init__('image_subscriber')
 
-    self.marker_list = MarkerArray();
-    self.marker_list.marker = [];
+    self.marker_list = MarkerArray()
+    self.marker_list.marker = []
       
     # Create the subscriber. This subscriber will receive an Image
     # from the video_frames topic. The queue size is 10 messages.
@@ -55,8 +55,8 @@ class ImageSubscriber(Node):
     self.br = CvBridge()
 
     #For storing objects detected by the robot's camera
-    self.detected_objects = [];
-    self.image_size = None;
+    self.detected_objects = []
+    self.image_size = None
 
     # position listener
     self.qos = rclpy.qos.QoSProfile(
@@ -300,32 +300,32 @@ class ImageSubscriber(Node):
     if len(self.detected_objects) == 0: 
       return 
 
-    robot_currX = 0;
-    robot_currY = 0;
-    robot_currZ = 0;
+    robot_currX = 0
+    robot_currY = 0
+    robot_currZ = 0
     
-    object = self.detected_objects[0];
-    object_height = object.h;
-    object_width = object.w;
-    object_fromLeft = object.x;
-    object_fromTop = object.y;
-    object_area = object.area;
-    object_centroid = object.centroid;
-    object_color = object.color;
+    object = self.detected_objects[0]
+    object_height = object.h
+    object_width = object.w
+    object_fromLeft = object.x
+    object_fromTop = object.y
+    object_area = object.area
+    object_centroid = object.centroid
+    object_color = object.color
 
-    dist_objectToMarker = self.distMarkerToCamera(object_height);
-    object_realHeight = 200;
-    object_pixelHeight = object_height * 0.2646;
+    dist_objectToMarker = self.distMarkerToCamera(object_height)
+    object_realHeight = 200
+    object_pixelHeight = object_height * 0.2646
 
-    real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker;
-    rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0;
+    real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker
+    rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0
     real_xToCenter = object_realHeight / object_pixelHeight * rel_xToCenter
     
-    cylinder_absX = robot_currX + real_xToCenter;
+    cylinder_absX = robot_currX + real_xToCenter
     cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
-    cylinder_absZ = 0;
-    obj_in_cam[0] = cylinder_absX;
-    obj_in_cam[1] = cylinder_absY;
+    cylinder_absZ = 0
+    obj_in_cam[0] = cylinder_absX
+    obj_in_cam[1] = cylinder_absY
     
     translation = [0,0,0]
     quaternion = [1,0,0,0]
