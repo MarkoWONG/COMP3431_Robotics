@@ -162,6 +162,7 @@ class ImageSubscriber(Node):
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = True
           print(f"color: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          self.showDistance(h)
         
         self.detected_objects.append({"color": self.BLUE, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
   
@@ -219,7 +220,7 @@ class ImageSubscriber(Node):
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = True
           print(f"color: green, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
-
+          self.showDistance(h)
         self.detected_objects.append({"color": self.GREEN, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
 
 
@@ -277,6 +278,7 @@ class ImageSubscriber(Node):
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = True
           print(f"color: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          self.showDistance(h)
 
         self.detected_objects.append({"color": self.YELLOW, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
 
@@ -340,8 +342,9 @@ class ImageSubscriber(Node):
     cylinder_absX = robot_currX + real_xToCenter
     cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
     cylinder_absZ = 0
-    obj_in_cam = (cylinder_absX, cylinder_absY, 0)
     
+    # obj_in_cam = [cylinder_absX, cylinder_absY, 0]
+    obj_in_cam = [0, 0, 0]
     translation = [0,0,0]
     quaternion = [1,0,0,0]
     translation, quaternion = self.transform_frame("map", "camera_link", translation, quaternion)
