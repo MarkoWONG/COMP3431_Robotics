@@ -40,7 +40,7 @@ class ImageSubscriber(Node):
     super().__init__('image_subscriber')
 
     self.marker_list = MarkerArray();
-    self.marker_list.marker = [];
+    self.marker_list.markers = [];
       
     # Create the subscriber. This subscriber will receive an Image
     # from the video_frames topic. The queue size is 10 messages.
