@@ -20,17 +20,31 @@ from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Image
 import numpy as np
 import math
 
+from nav_msgs.msg import Odometry
+
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from visualization_msgs.msg import Marker, MarkerArray
  
 class ImageSubscriber(Node):
+
+  # Colour dectection
   PINK = 0
   BLUE = 1
   GREEN = 2
   YELLOW = 3
   MAX_AREA_DETECTION_THRESHOLD = 800
   MIN_AREA_DETECTION_THRESHOLD = 375
+
+  # Robot Position
+  robot_pos_x = 0
+  robot_pos_y = 0
+  robot_pos_z = 0
+  robot_ori_x = 0
+  robot_ori_y = 0
+  robot_ori_z = 0
+  robot_ori_w = 0
+
   """
   Create an ImageSubscriber class, which is a subclass of the Node class.
   """
@@ -54,6 +68,14 @@ class ImageSubscriber(Node):
       10)
     self.subscription # prevent unused variable warning
       
+    # Subscribe to odometery, to get robot position
+    self.subscription2 = self.create_subscription(
+      Odometry,
+      '/odom',
+      self.odom_callback,
+      rclpy.qos.QoSProfile(depth=10, reliability=rclpy.qos.ReliabilityPolicy.BEST_EFFORT)
+    )
+
     # Used to convert between ROS and OpenCV images
     self.br = CvBridge()
 
@@ -68,7 +90,7 @@ class ImageSubscriber(Node):
         depth=1
     )
 
-    # transform lisnter
+    # transform listener
     self.tf_buffer = Buffer()
     self.tf_listener = TransformListener(self.tf_buffer, self)
 
@@ -90,7 +112,6 @@ class ImageSubscriber(Node):
     hsv_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2HSV)
     self.image_size = hsv_frame.shape
     
-    #We only need to worry about blue, green and yellow because all the markers are half pink
     self.detect_objects(hsv_frame, current_frame)
     self.calcDistanceAndPublish()
 
@@ -102,9 +123,14 @@ class ImageSubscriber(Node):
     
     cv2.waitKey(1)
 
-  def detect_objects(self, hsv_frame, current_frame):
-    
+  # Receiving position
+  def odom_callback(self, msg):
+    position = msg.pose.pose.position
+    orientation = msg.pose.pose.orientation
+    self.robot_pos_x, self.robot_pos_y, self.robot_pos_z = (position.x, position.y, position.z)
+    self.robot_ori_x, self.robot_ori_y, self.robot_ori_z, self.robot_ori_w = (orientation.x, orientation.y, orientation.z, orientation.w)
 
+  def detect_objects(self, hsv_frame, current_frame):
     light_pink = (158, 101, 168)
     dark_pink = (179, 255, 255)
 
@@ -202,6 +228,7 @@ class ImageSubscriber(Node):
           print(f"colour: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, green_mask, self.GREEN, pink_on_top)
   
+  # Add marker to detected_objects list
   def add_objects(self, mask1, mask2, colour, pink_on_top):
     combined_mask = cv2.bitwise_or(mask1, mask2)
 
