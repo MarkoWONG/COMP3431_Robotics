@@ -92,10 +92,7 @@ class ImageSubscriber(Node):
     self.image_size = hsv_frame.shape
     
     #We only need to worry about blue, green and yellow because all the markers are half pink
-    self.find_blue_objects(hsv_frame, current_frame)
-    self.find_green_objects(hsv_frame, current_frame)
-    self.find_yellow_objects(hsv_frame, current_frame)
-    
+    self.detect_objects(hsv_frame, current_frame)
     self.calcDistanceAndPublish()
 
     # Display camera image
@@ -106,149 +103,42 @@ class ImageSubscriber(Node):
     
     cv2.waitKey(1)
 
-  def find_blue_objects(self, hsv_frame, current_frame):
-    # Filter out everything that is not blue or pink
+  def detect_objects(self, hsv_frame, current_frame):
+    
+    light_pink = (158, 101, 168)
+    dark_pink = (179, 255, 255)
+    pink_mask = cv2.inRange(hsv_frame, light_pink, dark_pink)
+    result = cv2.bitwise_and(current_frame, current_frame, mask=pink_mask)
+
     light_blue = (100, 50, 30)
     dark_blue = (105, 255, 255)
-    
     blue_mask = cv2.inRange(hsv_frame, light_blue, dark_blue)
     result = cv2.bitwise_and(current_frame, current_frame, mask=blue_mask)
 
-    light_pink = (150, 40, 0)
-    dark_pink = (175, 255, 255)
-    pink_mask = cv2.inRange(hsv_frame, light_pink, dark_pink)
-    result = cv2.bitwise_and(current_frame, current_frame, mask=pink_mask)
-    
-    blue_pink_mask = cv2.bitwise_or(blue_mask, pink_mask)
-
-    cv2.namedWindow("blue_mask")
-    cv2.imshow("blue_mask", blue_mask)
-
-    cv2.namedWindow("pink_mask")
-    cv2.imshow("pink_mask", pink_mask)
-
-    cv2.namedWindow("blue_pink_mask")
-    cv2.imshow("blue_pink_mask", blue_pink_mask)
-  
-    # Run 4-way connected components, with statistics for blue+pink objects
-    output = cv2.connectedComponentsWithStats(blue_pink_mask, 4, cv2.CV_32S)
-    (numLabels, labels, stats, centroids) = output
- 
-    # Print statistics for each blob (connected component)
-    # use these statistics to find the bounding box of each blob
-    # and to line up laser scan with centroid of the blob
-    for i in range(1, numLabels):
-      x = stats[i, cv2.CC_STAT_LEFT]
-      y = stats[i, cv2.CC_STAT_TOP]
-      w = stats[i, cv2.CC_STAT_WIDTH]
-      h = stats[i, cv2.CC_STAT_HEIGHT]
-      area = stats[i, cv2.CC_STAT_AREA]
-        
-      #If the area of the blob is more than 250 pixels:
-      if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
-        (centroid_x1, centroid_y1) = centroids[i]
-        
-        #look for a pink object above the blue object
-        output2 = cv2.connectedComponentsWithStats(pink_mask, 4, cv2.CV_32S)
-        (numLabels2, labels2, stats2, centroids2) = output2
-        
-        pink_on_top = False
-        for j in range(1, numLabels2):
-          (centroid_x2, centroid_y2) = centroids2[j]
-
-          #check that x coordinate of the centroid of the pink blob is within +/- 10% of the x coordinate of the blue blob
-          if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
-            #check that the the pink blob is on top of the blue blob
-            if (centroid_y2 <= centroid_y1): 
-              pink_on_top = True
-          print(f"color: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
-          self.showDistance(h)
-        
-        self.detected_objects.append({"color": self.BLUE, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
-  
-  def find_green_objects(self, hsv_frame, current_frame):
-    # Filter out everything that is not green
     light_green = (40, 65, 30)
     dark_green = (90, 255, 255)
     green_mask = cv2.inRange(hsv_frame, light_green, dark_green)
     result = cv2.bitwise_and(current_frame, current_frame, mask=green_mask)
-    
-    light_pink = (150, 40, 0)
-    dark_pink = (175, 255, 255)
 
-    pink_mask = cv2.inRange(hsv_frame, light_pink, dark_pink)
-    result = cv2.bitwise_and(current_frame, current_frame, mask=pink_mask)
-    
-    green_pink_mask = cv2.bitwise_or(green_mask, pink_mask)
-
-    cv2.namedWindow("green_mask")
-    cv2.imshow("green_mask", green_mask)
-
-    cv2.namedWindow("green_pink_mask")
-    cv2.imshow("green_pink_mask", green_pink_mask)
-
-    # Run 4-way connected components, with statistics for blue+pink objects
-    output = cv2.connectedComponentsWithStats(green_pink_mask, 4, cv2.CV_32S)
-    (numLabels, labels, stats, centroids) = output
- 
-    # Print statistics for each blob (connected component)
-    # use these statistics to find the bounding box of each blob
-    # and to line up laser scan with centroid of the blob
-    for i in range(1, numLabels):
-      x = stats[i, cv2.CC_STAT_LEFT]
-      y = stats[i, cv2.CC_STAT_TOP]
-      w = stats[i, cv2.CC_STAT_WIDTH]
-      h = stats[i, cv2.CC_STAT_HEIGHT]
-      area = stats[i, cv2.CC_STAT_AREA]
-        
-      #If the area of the blob is more than 250 pixels:
-      if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
-        (centroid_x1, centroid_y1) = centroids[i]
-        
-        #look for a pink object above the blue object
-        output2 = cv2.connectedComponentsWithStats(pink_mask, 4, cv2.CV_32S)
-        (numLabels2, labels2, stats2, centroids2) = output2
-        
-        pink_on_top = False
-        for j in range(1, numLabels2):
-          (centroid_x2, centroid_y2) = centroids2[j]
-
-          #check that x coordinate of the centroid of the pink blob is within +/- 10% of the x coordinate of the blue blob
-          if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
-            
-            #check that the the pink blob is on top of the blue blob
-            if (centroid_y2 <= centroid_y1): 
-              pink_on_top = True
-          print(f"color: green, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
-          self.showDistance(h)
-        self.detected_objects.append({"color": self.GREEN, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
-
-
-  def find_yellow_objects(self, hsv_frame, current_frame):
-    # Filter out everything that is not yellow
     light_yellow = (20, 110, 30)
     dark_yellow = (35, 255, 255)
     yellow_mask = cv2.inRange(hsv_frame, light_yellow, dark_yellow)
     result = cv2.bitwise_and(current_frame, current_frame, mask=yellow_mask)
 
-    light_pink = (150, 40, 0)
-    dark_pink = (175, 255, 255)
-
-    pink_mask = cv2.inRange(hsv_frame, light_pink, dark_pink)
-    result = cv2.bitwise_and(current_frame, current_frame, mask=pink_mask)
-    
-    yellow_pink_mask = cv2.bitwise_or(yellow_mask, pink_mask)
-
-    cv2.namedWindow("yellow_mask")
-    cv2.imshow("yellow_mask", yellow_mask)
-
-    cv2.namedWindow("yellow_pink_mask")
-    cv2.imshow("yellow_pink_mask", yellow_pink_mask)
-  
-    # Run 4-way connected components, with statistics for yellow+pink objects
-    output = cv2.connectedComponentsWithStats(yellow_pink_mask, 4, cv2.CV_32S)
+    #First detect pink
+    # Run 4-way connected components, with statistics for blue+pink objects
+    output = cv2.connectedComponentsWithStats(pink_mask, 4, cv2.CV_32S)
     (numLabels, labels, stats, centroids) = output
- 
+    
+    blue_objects = cv2.connectedComponentsWithStats(blue_mask, 4, cv2.CV_32S)
+    (numLabelsB, labelsB, statsB, centroidsB) = blue_objects
+
+    yellow_objects = cv2.connectedComponentsWithStats(yellow_mask, 4, cv2.CV_32S)
+    (numLabelsY, labelsY, statsY, centroidsY) = yellow_objects
+        
+    green_objects = cv2.connectedComponentsWithStats(green_mask, 4, cv2.CV_32S)
+    (numLabelsG, labelsG, statsG, centroidsG) = green_objects
+
     # Print statistics for each blob (connected component)
     # use these statistics to find the bounding box of each blob
     # and to line up laser scan with centroid of the blob
@@ -263,25 +153,71 @@ class ImageSubscriber(Node):
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         (centroid_x1, centroid_y1) = centroids[i]
         
-        #look for a pink object above the blue object
-        output2 = cv2.connectedComponentsWithStats(pink_mask, 4, cv2.CV_32S)
-        (numLabels2, labels2, stats2, centroids2) = output2
-        pink_on_top = False
+        #Check for blue objects
+        for j in range(1, numLabelsB):
+          pink_on_top = True
+          (centroid_x2, centroid_y2) = centroidsB[j]
 
-        for j in range(1, numLabels2):
-          (centroid_x2, centroid_y2) = centroids2[j]
+          if (not (area <= 1.2 * statsB[j, cv2.CC_STAT_AREA] and area >= 0.8 * statsB[j, cv2.CC_STAT_AREA])):
+            continue
 
-          #check that x coordinate of the centroid of the pink blob is within +/- 10% of the x coordinate of the blue blob
+          #check that x coordinate of the centroid of the blue blob is within +/- 10% of the x coordinate of the pink blob
           if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
-            
-            #check that the the pink blob is on top of the blue blob
+            #check that the the blue blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
-              pink_on_top = True
-          print(f"color: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
-          self.showDistance(h)
+              pink_on_top = False 
+          print(f"colour: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          self.add_objects(pink_mask, blue_mask, self.BLUE, pink_on_top)
 
-        self.detected_objects.append({"color": self.YELLOW, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        #Check for yellow objects
+        for j in range(1, numLabelsY):
+          (centroid_x2, centroid_y2) = centroidsY[j]
 
+          if (not (area <= 1.2 * statsY[j, cv2.CC_STAT_AREA] and area >= 0.8 * statsY[j, cv2.CC_STAT_AREA])):
+            continue
+
+          #check that x coordinate of the centroid of the yellow blob is within +/- 10% of the x coordinate of the pink blob
+          if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
+            #check that the the yellow blob is on top of the pink blob
+            if (centroid_y2 <= centroid_y1): 
+              pink_on_top = False
+          print(f"colour: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          self.add_objects(pink_mask, yellow_mask, self.YELLOW, pink_on_top)
+  
+        #Check for green objects
+        for j in range(1, numLabelsG):
+          (centroid_x2, centroid_y2) = centroidsG[j]
+
+          if (not (area <= 1.2 * statsG[j, cv2.CC_STAT_AREA] and area >= 0.8 * statsG[j, cv2.CC_STAT_AREA])):
+            continue
+
+          #check that x coordinate of the centroid of the yellow blob is within +/- 10% of the x coordinate of the pink blob
+          if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
+            #check that the the green blob is on top of the pink blob
+            if (centroid_y2 <= centroid_y1): 
+              pink_on_top = False
+          print(f"colour: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          self.add_objects(pink_mask, green_mask, self.GREEN, pink_on_top)
+  
+  def add_objects(self, mask1, mask2, colour, pink_on_top):
+    combined_mask = cv2.bitwise_or(mask1, mask2)
+
+    output = cv2.connectedComponentsWithStats(combined_mask, 4, cv2.CV_32S)
+    (numLabels, labels, stats, centroids) = output
+ 
+    # Print statistics for each blob (connected component)
+    # use these statistics to find the bounding box of each blob
+    # and to line up laser scan with centroid of the blob
+    for i in range(1, numLabels):
+      x = stats[i, cv2.CC_STAT_LEFT]
+      y = stats[i, cv2.CC_STAT_TOP]
+      w = stats[i, cv2.CC_STAT_WIDTH]
+      h = stats[i, cv2.CC_STAT_HEIGHT]
+      area = stats[i, cv2.CC_STAT_AREA]
+        
+      #If the area of the blob is more than 250 pixels:
+      if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
+        self.detected_objects.append({"colour": colour, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
           
   def check_existing_markers(self, point, new_color):
     for marker in self.marker_list.markers:
