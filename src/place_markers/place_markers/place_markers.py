@@ -246,9 +246,16 @@ class ImageSubscriber(Node):
       area = stats[i, cv2.CC_STAT_AREA]
         
       #If the area of the blob is more than 250 pixels:
-      if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
+      if self.new_marker(colour) and area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         self.detected_objects.append({"colour": colour, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
 
+  # check if dectected object is new 
+  def new_marker(self, dectected_colour):
+    for marker in self.detect_objects:
+      if marker.colour == dectected_colour:
+        return False
+    return True
+      
 
   def check_existing_markers(self, point, new_color):
     for marker in self.marker_list.markers:
@@ -284,10 +291,6 @@ class ImageSubscriber(Node):
     if len(self.detected_objects) == 0: 
       return 
 
-    robot_currX = 0
-    robot_currY = 0
-    robot_currZ = 0
-    
     object = self.detected_objects[0]
     object_height = object["h"]
     object_width = object["w"]
@@ -306,7 +309,7 @@ class ImageSubscriber(Node):
     rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0
     real_xToCenter = object_realHeight / object_pixelHeight * rel_xToCenter
     
-    cylinder_absX = robot_currX + real_xToCenter
+    cylinder_absX = self.robot_pos_x + real_xToCenter
     cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
     cylinder_absZ = 0
     
