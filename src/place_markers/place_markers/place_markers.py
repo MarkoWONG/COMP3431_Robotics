@@ -146,18 +146,18 @@ class ImageSubscriber(Node):
         output2 = cv2.connectedComponentsWithStats(pink_mask, 4, cv2.CV_32S)
         (numLabels2, labels2, stats2, centroids2) = output2
         
+        pink_on_top = False
         for j in range(1, numLabels2):
           (centroid_x2, centroid_y2) = centroids2[j]
 
           #check that x coordinate of the centroid of the pink blob is within +/- 10% of the x coordinate of the blue blob
           if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
-            pink_on_top = False
             #check that the the pink blob is on top of the blue blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = True
           print(f"colour: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
         
-        # self.detected_objects.append({"x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        self.detected_objects.append({"colour": self.BLUE, pink_on_top: pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
   
   def find_green_objects(self, hsv_frame, current_frame):
     # Filter out everything that is not green
@@ -201,16 +201,19 @@ class ImageSubscriber(Node):
         output2 = cv2.connectedComponentsWithStats(pink_mask, 4, cv2.CV_32S)
         (numLabels2, labels2, stats2, centroids2) = output2
         
+        pink_on_top = False
         for j in range(1, numLabels2):
           (centroid_x2, centroid_y2) = centroids2[j]
 
           #check that x coordinate of the centroid of the pink blob is within +/- 10% of the x coordinate of the blue blob
           if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
-            pink_on_top = False
+            
             #check that the the pink blob is on top of the blue blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = True
           print(f"colour: green, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+
+        self.detected_objects.append({"colour": self.GREEN, pink_on_top: pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
 
 
   def find_yellow_objects(self, hsv_frame, current_frame):
@@ -254,18 +257,22 @@ class ImageSubscriber(Node):
         #look for a pink object above the blue object
         output2 = cv2.connectedComponentsWithStats(pink_mask, 4, cv2.CV_32S)
         (numLabels2, labels2, stats2, centroids2) = output2
-        
+        pink_on_top = False
+
         for j in range(1, numLabels2):
           (centroid_x2, centroid_y2) = centroids2[j]
 
           #check that x coordinate of the centroid of the pink blob is within +/- 10% of the x coordinate of the blue blob
           if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
-            pink_on_top = False
+            
             #check that the the pink blob is on top of the blue blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = True
           print(f"colour: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
 
+        self.detected_objects.append({"colour": self.YELLOW, pink_on_top: pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+
+          
   def check_existing_markers(self, point, new_color):
     for marker in self.marker_list.markers:
       if math.sqrt((point[0] - marker.pose.position.x)**2 + \
@@ -312,6 +319,7 @@ class ImageSubscriber(Node):
     object_area = object.area;
     object_centroid = object.centroid;
     object_color = object.color;
+    pink_on_top = object.pink_on_top
 
     dist_objectToMarker = self.distMarkerToCamera(object_height);
     object_realHeight = 200;
@@ -321,11 +329,10 @@ class ImageSubscriber(Node):
     rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0;
     real_xToCenter = object_realHeight / object_pixelHeight * rel_xToCenter
     
-    cylinder_absX = robot_currX + real_xToCenter;
+    cylinder_absX = robot_currX + real_xToCenter
     cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
-    cylinder_absZ = 0;
-    obj_in_cam[0] = cylinder_absX;
-    obj_in_cam[1] = cylinder_absY;
+    cylinder_absZ = 0
+    obj_in_cam = (cylinder_absX, cylinder_absY)
     
     translation = [0,0,0]
     quaternion = [1,0,0,0]
@@ -338,9 +345,9 @@ class ImageSubscriber(Node):
     final_coordinate[1] = rotation[1] + translation[1]
     final_coordinate[2] = rotation[2] + translation[2]
 
-    self.add_new_point(final_coordinate, object_color)
+    self.add_new_point(final_coordinate, object_color, pink_on_top)
   
-  def generate_marker(self, coordinate, color):
+  def generate_marker(self, coordinate, color, pink_on_top):
     # down cylinder
     marker = Marker()
     # marker.header.frame_id = "map"
@@ -359,7 +366,7 @@ class ImageSubscriber(Node):
     marker.scale.y = 0.14
     marker.scale.z = 0.2
     marker.color.a = 1.0
-    if special_color_up != True:
+    if pink_on_top is False:
       rgb = (255,192,203)
     elif color == self.YELLOW:
       rgb = (255,234,0)
@@ -372,14 +379,14 @@ class ImageSubscriber(Node):
     marker.color.b = rgb[2] / 255.0
     self.marker_list.markers.append(marker)
 
-  def add_new_point(self, coordinate, color):
+  def add_new_point(self, coordinate, color, pink_on_top):
     coordinate[0] = float(coordinate[0])
     coordinate[1] = float(coordinate[1])
     coordinate[2] = float(coordinate[2])
     if self.check_existing_markers(coordinate, color):
       return
     ## print("add_new_point2")
-    self.generate_marker(coordinate, color)
+    self.generate_marker(coordinate, color, pink_on_top)
     print(f"-----------Current length{len(self.marker_list.markers)}----------")
     self.plot_publisher.publish(self.marker_list)
 
