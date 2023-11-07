@@ -328,6 +328,36 @@ class ImageSubscriber(Node):
     marker.color.b = rgb[2] / 255.0
     self.marker_list.markers.append(marker)
 
+    # up cylinder
+    marker = Marker()
+    marker.header.frame_id = "/map"
+    marker.id = len(self.marker_list.markers) + 1
+    marker.type = marker.CYLINDER
+    marker.action = marker.ADD
+    marker.pose.orientation.x = 0.0
+    marker.pose.orientation.y = 0.0
+    marker.pose.orientation.z = 0.0
+    marker.pose.orientation.w = 1.0
+    marker.pose.position.x = float(coordinate[0])
+    marker.pose.position.y = float(coordinate[1])
+    marker.pose.position.z = float(coordinate[2]) + 0.3
+    marker.scale.x = 0.14
+    marker.scale.y = 0.14
+    marker.scale.z = 0.2
+    if pink_on_top is True:
+      rgb = (255,192,203)
+    elif color == self.YELLOW:
+      rgb = (255,234,0)
+    elif color == self.BLUE:
+      rgb = (0,191,255)
+    else:
+      rgb = (0,100,0)
+    marker.color.a = 1.0
+    marker.color.r = rgb[0] / 255.0
+    marker.color.g = rgb[1] / 255.0
+    marker.color.b = rgb[2] / 255.0
+    self.marker_list.markers.append(marker)
+
   def add_new_point(self, coordinate, color, pink_on_top):
     coordinate[0] = float(coordinate[0])
     coordinate[1] = float(coordinate[1])
