@@ -311,22 +311,22 @@ class ImageSubscriber(Node):
     robot_currY = 0;
     robot_currZ = 0;
     
-    object = self.detected_objects[0];
-    object_height = object.h;
-    object_width = object.w;
-    object_fromLeft = object.x;
-    object_fromTop = object.y;
-    object_area = object.area;
-    object_centroid = object.centroid;
-    object_color = object.color;
+    object = self.detected_objects[0]
+    object_height = object.h
+    object_width = object.w
+    object_fromLeft = object.x
+    object_fromTop = object.y
+    object_area = object.area
+    object_centroid = object.centroid
+    object_color = object.color
     pink_on_top = object.pink_on_top
 
-    dist_objectToMarker = self.distMarkerToCamera(object_height);
-    object_realHeight = 200;
-    object_pixelHeight = object_height * 0.2646;
+    dist_objectToMarker = self.distMarkerToCamera(object_height)
+    object_realHeight = 200
+    object_pixelHeight = object_height * 0.2646
 
-    real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker;
-    rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0;
+    real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker
+    rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0
     real_xToCenter = object_realHeight / object_pixelHeight * rel_xToCenter
     
     cylinder_absX = robot_currX + real_xToCenter
