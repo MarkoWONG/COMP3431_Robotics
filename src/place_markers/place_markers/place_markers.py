@@ -29,6 +29,8 @@ class ImageSubscriber(Node):
   BLUE = 1
   GREEN = 2
   YELLOW = 3
+  MAX_AREA_DETECTION_THRESHOLD = 400
+  MIN_AREA_DETECTION_THRESHOLD = 250
   """
   Create an ImageSubscriber class, which is a subclass of the Node class.
   """
@@ -76,6 +78,8 @@ class ImageSubscriber(Node):
     """
     Callback function.
     """
+    self.detected_objects = []
+    
     # Display the message on the console
     self.get_logger().info('Receiving video frame')
  
@@ -140,7 +144,7 @@ class ImageSubscriber(Node):
       area = stats[i, cv2.CC_STAT_AREA]
         
       #If the area of the blob is more than 250 pixels:
-      if area > 250:
+      if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         (centroid_x1, centroid_y1) = centroids[i]
         
         #look for a pink object above the blue object
@@ -195,7 +199,7 @@ class ImageSubscriber(Node):
       area = stats[i, cv2.CC_STAT_AREA]
         
       #If the area of the blob is more than 250 pixels:
-      if area > 250:
+      if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         (centroid_x1, centroid_y1) = centroids[i]
         
         #look for a pink object above the blue object
@@ -252,7 +256,7 @@ class ImageSubscriber(Node):
       area = stats[i, cv2.CC_STAT_AREA]
         
       #If the area of the blob is more than 250 pixels:
-      if area > 250:
+      if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         (centroid_x1, centroid_y1) = centroids[i]
         
         #look for a pink object above the blue object
@@ -399,9 +403,9 @@ class ImageSubscriber(Node):
       
   def distMarkerToCamera(self, marker_height):
     # Quadratic regression equation distance = a*x^2 + b*x + c
-    a = 0.192229
-    b = -23.8783
-    c = 941.638
+    a = 0.000178
+    b = -0.316
+    c = 167
     distance = (a*(marker_height**2)) - (b*marker_height) + c 
     self.showDistance(marker_height)
     return distance
