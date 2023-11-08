@@ -152,10 +152,10 @@ class ImageSubscriber(Node):
       #If the area of the blob is more than 250 pixels:
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         (centroid_x1, centroid_y1) = centroids[i]
-        
+        pink_on_top = True
+
         #Check for blue objects
         for j in range(1, numLabelsB):
-          pink_on_top = True
           (centroid_x2, centroid_y2) = centroidsB[j]
 
           if (not (area <= 1.2 * statsB[j, cv2.CC_STAT_AREA] and area >= 0.8 * statsB[j, cv2.CC_STAT_AREA])):
@@ -166,7 +166,7 @@ class ImageSubscriber(Node):
             #check that the the blue blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = False 
-          print(f"colour: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          print(f"color: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, blue_mask, self.BLUE, pink_on_top)
 
         #Check for yellow objects
@@ -181,7 +181,7 @@ class ImageSubscriber(Node):
             #check that the the yellow blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = False
-          print(f"colour: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          print(f"color: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, yellow_mask, self.YELLOW, pink_on_top)
   
         #Check for green objects
@@ -191,15 +191,15 @@ class ImageSubscriber(Node):
           if (not (area <= 1.2 * statsG[j, cv2.CC_STAT_AREA] and area >= 0.8 * statsG[j, cv2.CC_STAT_AREA])):
             continue
 
-          #check that x coordinate of the centroid of the yellow blob is within +/- 10% of the x coordinate of the pink blob
+          #check that x coordinate of the centroid of the green blob is within +/- 10% of the x coordinate of the pink blob
           if (centroid_x2 <= 1.1 * centroid_x1 and centroid_x1 >= 0.9 * centroid_x1):
             #check that the the green blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = False
-          print(f"colour: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          print(f"color: green, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, green_mask, self.GREEN, pink_on_top)
   
-  def add_objects(self, mask1, mask2, colour, pink_on_top):
+  def add_objects(self, mask1, mask2, color, pink_on_top):
     combined_mask = cv2.bitwise_or(mask1, mask2)
 
     output = cv2.connectedComponentsWithStats(combined_mask, 4, cv2.CV_32S)
@@ -217,7 +217,7 @@ class ImageSubscriber(Node):
         
       #If the area of the blob is more than 250 pixels:
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
-        self.detected_objects.append({"colour": colour, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
+        self.detected_objects.append({"color": color, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
           
   def check_existing_markers(self, point, new_color):
     for marker in self.marker_list.markers:
@@ -275,7 +275,7 @@ class ImageSubscriber(Node):
     # real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker
     real_distance = dist_objectToMarker # * similarTriangleRatio
     rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0
-    real_xToCenter = object_realHeight / object_pixelHeight * rel_xToCenter
+    # real_xToCenter = object_realHeight / object_pixelHeight * rel_xToCenter
     
     # cylinder_absX = robot_currX + real_xToCenter
     cylinder_absX = rel_xToCenter * similarTriangleRatio
