@@ -40,4 +40,5 @@ ros2 run nav2_map_server map_saver_cli -f ~/{mapName}\
 sudo shutdown now (in ssh terminal)
 
 # Notes
-If your build fails check if there is a empty folder called "launch" in the src/wall_follower/wall_follower. If the folder doesn't exist then create the folder.
+1. If your build fails check if there is a empty folder called "launch" in the src/wall_follower/wall_follower. If the folder doesn't exist then create the folder.
+2. If cartographer has an error, run bringup again
