@@ -9,7 +9,6 @@
 # Import the necessary libraries
 import rclpy # Python library for ROS 2
 import rclpy.qos
-from pyquaternion import Quaternion
 from rclpy.node import Node # Handles the creation of nodes
 from sensor_msgs.msg import Image # Image is the message type
 
@@ -143,7 +142,7 @@ class ImageSubscriber(Node):
     roll, pitch, self.robot_yaw = self.euler_from_quaternion(orientation)
 
 # ------------------------------- Helper Functions -----------------------------
-  def euler_from_quaternion(quaternion):
+  def euler_from_quaternion(self, quaternion):
     # Convert a quaternion to roll, pitch, and yaw (Euler angles)
     x, y, z, w = quaternion.x, quaternion.y, quaternion.z, quaternion.w
     t0 = +2.0 * (w * x + y * z)
@@ -316,13 +315,13 @@ class ImageSubscriber(Node):
   # Add detected_objects --> marker_list
   def add_detected_objects(self):
     # Add all detected objects to marker_list
-    for object in self.detect_objects:
+    for object in self.detected_objects:
 
       coordinates = self.calculateCoordinates(object) 
       print(f"coordinates for {object['colour']} marker is x:{coordinates[0]} y:{coordinates[1]} z:{coordinates[2]}")
       
       # Creates marker object and adds to marker list
-      self.generate_marker(coordinates, object['color'], object['pink_on_top'])
+      self.generate_marker(coordinates, object['colour'], object['pink_on_top'])
 
   def calculateCoordinates(self, object):
     distance = self.distMarkerToCamera(object['h'])
