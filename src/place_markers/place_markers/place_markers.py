@@ -29,8 +29,8 @@ class ImageSubscriber(Node):
   BLUE = 1
   GREEN = 2
   YELLOW = 3
-  MAX_AREA_DETECTION_THRESHOLD = 800
-  MIN_AREA_DETECTION_THRESHOLD = 375
+  MAX_AREA_DETECTION_THRESHOLD = 1100
+  MIN_AREA_DETECTION_THRESHOLD = 200
   """
   Create an ImageSubscriber class, which is a subclass of the Node class.
   """
@@ -166,7 +166,7 @@ class ImageSubscriber(Node):
             #check that the the blue blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = False 
-          print(f"color: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          # print(f"color: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, blue_mask, self.BLUE, pink_on_top)
 
         #Check for yellow objects
@@ -181,7 +181,7 @@ class ImageSubscriber(Node):
             #check that the the yellow blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = False
-          print(f"color: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          # print(f"color: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, yellow_mask, self.YELLOW, pink_on_top)
   
         #Check for green objects
@@ -196,7 +196,7 @@ class ImageSubscriber(Node):
             #check that the the green blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = False
-          print(f"color: green, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          # print(f"color: green, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, green_mask, self.GREEN, pink_on_top)
   
   def add_objects(self, mask1, mask2, color, pink_on_top):
@@ -218,7 +218,8 @@ class ImageSubscriber(Node):
       #If the area of the blob is more than 250 pixels:
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         self.detected_objects.append({"color": color, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
-          
+        print(f"color: {color}, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}")
+
   def check_existing_markers(self, point, new_color):
     for marker in self.marker_list.markers:
       if math.sqrt((point[0] - marker.pose.position.x)**2 + \
@@ -268,7 +269,7 @@ class ImageSubscriber(Node):
     pink_on_top = object["pink_on_top"]
 
     dist_objectToMarker = self.distMarkerToCamera(object_height)
-    object_realHeight = 200
+    object_realHeight = 0.2
     # object_pixelHeight = object_height * 0.2646
     similarTriangleRatio = object_realHeight / object_height
 
@@ -314,9 +315,9 @@ class ImageSubscriber(Node):
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
     marker.pose.position.z = float(coordinate[2]) + 0.1
-    marker.scale.x = 0.14
-    marker.scale.y = 0.14
-    marker.scale.z = 0.2
+    marker.scale.x = 14.0
+    marker.scale.y = 14.0
+    marker.scale.z = 20.0
     marker.color.a = 1.0
     if pink_on_top is False:
       rgb = (255,192,203)
@@ -344,9 +345,9 @@ class ImageSubscriber(Node):
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
     marker.pose.position.z = float(coordinate[2]) + 0.3
-    marker.scale.x = 0.14
-    marker.scale.y = 0.14
-    marker.scale.z = 0.2
+    marker.scale.x = 14.0
+    marker.scale.y = 14.0
+    marker.scale.z = 20.0
     if pink_on_top is True:
       rgb = (255,192,203)
     elif color == self.YELLOW:
@@ -380,12 +381,13 @@ class ImageSubscriber(Node):
       
   def distMarkerToCamera(self, marker_height):
     # Quadratic regression equation distance = a*x^2 + b*x + c
-    a = 0.000178
-    b = -0.316
-    c = 167
+    a = 0.000561
+    b = -0.0622
+    c = 2.22
     distance = (a*(marker_height**2)) - (b*marker_height) + c 
+    print(f'distance from cam is: {distance}m and height was {marker_height}')
     # self.showDistance(marker_height)
-    return distance
+    return 1
 
 
 def main(args=None):
