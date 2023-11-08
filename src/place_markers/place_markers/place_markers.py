@@ -122,7 +122,6 @@ class ImageSubscriber(Node):
 
     # publish marker_list
     print(f"-----------Current length{len(self.marker_list.markers)}----------")
-    self.plot_publisher.publish(self.marker_list)
 
     # Display camera image
     cv2.namedWindow("camera")
@@ -131,6 +130,7 @@ class ImageSubscriber(Node):
     # cv2.imshow("mask", mask)
     
     cv2.waitKey(1)
+
 
   #  What to do when recieving position from robot
   def odom_callback(self, msg):
@@ -185,6 +185,7 @@ class ImageSubscriber(Node):
     yellow_mask = cv2.inRange(hsv_frame, light_yellow, dark_yellow)
     result = cv2.bitwise_and(current_frame, current_frame, mask=yellow_mask)
 
+
     # First detect pink
     # Run 4-way connected components, with statistics for blue+pink objects
     output = cv2.connectedComponentsWithStats(pink_mask, 4, cv2.CV_32S)
@@ -212,7 +213,7 @@ class ImageSubscriber(Node):
       #If the area of the blob is more than 250 pixels:
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         (centroid_x1, centroid_y1) = centroids[i]
-        
+
         #Check for blue objects
         for j in range(1, numLabelsB):
           pink_on_top = True
@@ -226,9 +227,9 @@ class ImageSubscriber(Node):
             #check that the the blue blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = False 
+
           print(f"colour: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, blue_mask, self.BLUE, pink_on_top)
-
 
         #Check for yellow objects
         for j in range(1, numLabelsY):
@@ -242,13 +243,13 @@ class ImageSubscriber(Node):
             #check that the the yellow blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = False
+
           print(f"colour: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, yellow_mask, self.YELLOW, pink_on_top)
   
         #Check for green objects
         for j in range(1, numLabelsG):
           (centroid_x2, centroid_y2) = centroidsG[j]
-
 
           if (not (area <= 1.2 * statsG[j, cv2.CC_STAT_AREA] and area >= 0.8 * statsG[j, cv2.CC_STAT_AREA])):
             continue
