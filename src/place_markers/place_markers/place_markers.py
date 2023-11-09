@@ -29,8 +29,8 @@ class ImageSubscriber(Node):
   BLUE = 1
   GREEN = 2
   YELLOW = 3
-  MAX_AREA_DETECTION_THRESHOLD = 800
-  MIN_AREA_DETECTION_THRESHOLD = 375
+  MAX_AREA_DETECTION_THRESHOLD = 1100
+  MIN_AREA_DETECTION_THRESHOLD = 200
   """
   Create an ImageSubscriber class, which is a subclass of the Node class.
   """
@@ -218,7 +218,8 @@ class ImageSubscriber(Node):
       #If the area of the blob is more than 250 pixels:
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         self.detected_objects.append({"color": color, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
-          
+        print(f"color: {color}, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}")
+  
   def check_existing_markers(self, point, new_color):
     for marker in self.marker_list.markers:
       if math.sqrt((point[0] - marker.pose.position.x)**2 + \
@@ -268,7 +269,7 @@ class ImageSubscriber(Node):
     pink_on_top = object["pink_on_top"]
 
     dist_objectToMarker = self.distMarkerToCamera(object_height)
-    object_realHeight = 200
+    object_realHeight = 200 # change to 0.2 if needed
     # object_pixelHeight = object_height * 0.2646
     similarTriangleRatio = object_realHeight / object_height
 
@@ -314,9 +315,9 @@ class ImageSubscriber(Node):
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
     marker.pose.position.z = float(coordinate[2]) + 0.1
-    marker.scale.x = 0.14
-    marker.scale.y = 0.14
-    marker.scale.z = 0.2
+    marker.scale.x = 0.14 # Change to 14 if needed
+    marker.scale.y = 0.14 # Change to 14 if needed
+    marker.scale.z = 0.2 # Change to 20 if needed
     marker.color.a = 1.0
     if pink_on_top is False:
       rgb = (255,192,203)
@@ -344,9 +345,9 @@ class ImageSubscriber(Node):
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
     marker.pose.position.z = float(coordinate[2]) + 0.3
-    marker.scale.x = 0.14
-    marker.scale.y = 0.14
-    marker.scale.z = 0.2
+    marker.scale.x = 0.14 # Change to 14 if needed
+    marker.scale.y = 0.14 # Change to 14 if needed
+    marker.scale.z = 0.2 # Change to 20 if needed
     if pink_on_top is True:
       rgb = (255,192,203)
     elif color == self.YELLOW:
@@ -380,12 +381,12 @@ class ImageSubscriber(Node):
       
   def distMarkerToCamera(self, marker_height):
     # Quadratic regression equation distance = a*x^2 + b*x + c
-    a = 0.000178
-    b = -0.316
-    c = 167
+    a = 0.000561
+    b = -0.0622
+    c = 2.22
     distance = (a*(marker_height**2)) - (b*marker_height) + c 
     # self.showDistance(marker_height)
-    return distance
+    return distance # return 1 for debugging
 
 
 def main(args=None):
