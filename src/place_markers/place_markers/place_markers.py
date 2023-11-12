@@ -350,7 +350,7 @@ class ImageSubscriber(Node):
     marker.pose.orientation.w = 1.0
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
-    marker.pose.position.z = float(coordinate[2]) + 0.3
+    marker.pose.position.z = float(coordinate[2]) + 0.08
     marker.scale.x = 0.17 # Change to 14 if needed
     marker.scale.y = 0.17 # Change to 14 if needed
     marker.scale.z = 0.23 # Change to 20 if needed
