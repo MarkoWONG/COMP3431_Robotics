@@ -30,8 +30,10 @@ class ImageSubscriber(Node):
   BLUE = 1
   GREEN = 2
   YELLOW = 3
-  MAX_AREA_DETECTION_THRESHOLD = 1100
-  MIN_AREA_DETECTION_THRESHOLD = 200
+
+  #Pixel detection thresholds
+  MAX_AREA_DETECTION_THRESHOLD = 1500
+  MIN_AREA_DETECTION_THRESHOLD = 300
 
   BLUE_PINK = False
   PINK_BLUE = False
@@ -67,7 +69,7 @@ class ImageSubscriber(Node):
     #   self.listener_callback,
     #   10)
     
-    self.position = None
+    # self.position = None
 
     # Used to convert between ROS and OpenCV images
     self.br = CvBridge()
@@ -79,10 +81,11 @@ class ImageSubscriber(Node):
     self.tf_buffer = Buffer()
     self.tf_listener = TransformListener(self.tf_buffer, self)
 
+    # Set up marker array and publisher
     self.marker_list = MarkerArray()
     self.marker_list.markers = []
-    self.marker_pub = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
-
+    self.marker_pub = self.create_publisher(MarkerArray, "/visualization_marker_array", 10) #added a slash to visualization marker array
+    
   # def odom_callback(self, data):
   #   pos = data.pose.pose.position
   #   self.position = pos
@@ -92,6 +95,7 @@ class ImageSubscriber(Node):
     """
     Callback function.
     """
+    #Clear list of deteted objects
     self.detected_objects = []
     
     # Display the message on the console
@@ -105,8 +109,10 @@ class ImageSubscriber(Node):
     hsv_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2HSV)
     self.image_size = hsv_frame.shape
     
-    #Detect objects runs a connected component analysis and adds the blobs to a list "detected_objects"
+    #Runs connected component analysis and adds the detected markers to a list "detected_objects"
     self.detect_objects(hsv_frame, current_frame)
+    
+    #Calcualtes coordinates and publishes the markers to cartographer.
     self.calcDistanceAndPublish()
 
     # Display camera image
@@ -174,7 +180,7 @@ class ImageSubscriber(Node):
             #check that the the blue blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = False 
-          print(f"color: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          # print(f"color: blue, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, blue_mask, self.BLUE, pink_on_top)
 
         #Check for yellow objects
@@ -189,7 +195,7 @@ class ImageSubscriber(Node):
             #check that the the yellow blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = False
-          print(f"color: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          # print(f"color: yellow, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, yellow_mask, self.YELLOW, pink_on_top)
   
         #Check for green objects
@@ -204,7 +210,7 @@ class ImageSubscriber(Node):
             #check that the the green blob is on top of the pink blob
             if (centroid_y2 <= centroid_y1): 
               pink_on_top = False
-          print(f"color: green, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
+          # print(f"color: green, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}, centroid of entire marker: {centroid_x1}, {centroid_x2}")
           self.add_objects(pink_mask, green_mask, self.GREEN, pink_on_top)
   
   def add_objects(self, mask1, mask2, color, pink_on_top):
@@ -213,9 +219,6 @@ class ImageSubscriber(Node):
     output = cv2.connectedComponentsWithStats(combined_mask, 4, cv2.CV_32S)
     (numLabels, labels, stats, centroids) = output
  
-    # Print statistics for each blob (connected component)
-    # use these statistics to find the bounding box of each blob
-    # and to line up laser scan with centroid of the blob
     for i in range(1, numLabels):
       x = stats[i, cv2.CC_STAT_LEFT]
       y = stats[i, cv2.CC_STAT_TOP]
@@ -223,7 +226,6 @@ class ImageSubscriber(Node):
       h = stats[i, cv2.CC_STAT_HEIGHT]
       area = stats[i, cv2.CC_STAT_AREA]
         
-      #If the area of the blob is more than 250 pixels:
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         self.detected_objects.append({"color": color, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
         print(f"color: {color}, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}")
@@ -240,7 +242,6 @@ class ImageSubscriber(Node):
     # (translation, rotation) = self.tf_listener('/odom', '/map', rclpy.time.Time())
     
     #Transform robot's current position (base_link) to map coordinates
-    
     translation = [0, 0, 0]
     quaternion = [1, 0, 0, 0]
     origin = [0, 0, 0]
@@ -248,7 +249,7 @@ class ImageSubscriber(Node):
     transformation = self.tf_buffer.lookup_transform("map", "base_link", rclpy.time.Time()).transform
     translation[0] = transformation.translation.x + translation[0]
     translation[1] = transformation.translation.y + translation[1]
-    translation[2] = transformation.translation.y + translation[2]
+    translation[2] = transformation.translation.z + translation[2]
     quaternion[0] = transformation.rotation.w
     quaternion[1] = quaternion[1] + transformation.rotation.x
     quaternion[2] = quaternion[2] + transformation.rotation.y
@@ -264,7 +265,8 @@ class ImageSubscriber(Node):
     for object in self.detected_objects:
       color = object["color"]
       pink_on_top = object["pink_on_top"]
-
+      
+      #Check if a marker of the same colour has already been added.
       if (color == self.BLUE and pink_on_top == False and self.BLUE_PINK == False):
         self.BLUE_PINK = True
         self.generate_marker(transformed_coordinate, color, pink_on_top)
@@ -277,36 +279,18 @@ class ImageSubscriber(Node):
       elif (color == self.YELLOW and self.YELLOW_PINK == False):
         self.YELLOW_PINK = True
         self.generate_marker(transformed_coordinate, color, pink_on_top)
-
-
-    # # real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker
-    # real_distance = dist_objectToMarker # * similarTriangleRatio
-    # rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0
-    # # real_xToCenter = object_realHeight / object_pixelHeight * rel_xToCenter
-    
-    # # cylinder_absX = robot_currX + real_xToCenter
-    # cylinder_absX = rel_xToCenter * similarTriangleRatio
-    # cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
-    # cylinder_absZ = 0
-    
-    # obj_in_cam = [cylinder_absY, cylinder_absX, 0]
-    # # obj_in_cam = [0, 0, 0]
-    # translation = [0,0,0]
-    # quaternion = [1,0,0,0]
-    # translation, quaternion = self.transform_frame("map", "camera_link", translation, quaternion)
-    # if (len(translation) != 3):
-    #   return
-
-    # my_quater = Quaternion(quaternion[0], quaternion[1], quaternion[2],quaternion[3])
-    # rotation = my_quater.rotate(obj_in_cam)
-    # final_coordinate = [0,0,0]
-    # final_coordinate[0] = rotation[0] + translation[0]
-    # final_coordinate[1] = rotation[1] + translation[1]
-    # final_coordinate[2] = rotation[2] + translation[2]
-
-    # self.add_new_point(final_coordinate, object_color, pink_on_top)
   
+  # Adds a new marker on cartographer.
   def generate_marker(self, coordinate, color, pink_on_top):
+    
+    color = "BLUE"
+    if (color == self.GREEN):
+      color = "GREEN"
+    elif (color == self.YELLOW):
+      color = "YELLOW"
+    
+    print(f"PUBlISHING {color} MARKER. PINK ON TOP: {pink_on_top}. COORDINATES: {coordinate}")
+
     pink = (255.0, 0.0, 230.0)
     yellow = (255.0, 239.0, 0.0)
     green = (0.0, 255.0, 34.0)
