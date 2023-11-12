@@ -241,9 +241,25 @@ class ImageSubscriber(Node):
     
     #Transform robot's current position (base_link) to map coordinates
     
-    translation = [0,0,0]
-    quaternion = [1,0,0,0]
+    translation = [0, 0, 0]
+    quaternion = [1, 0, 0, 0]
+    origin = [0, 0, 0]
 
+    transformation = self.tf_buffer.lookup_transform("map", "base_link", rclpy.time.Time()).transform
+    translation[0] = transformation.translation.x + translation[0]
+    translation[1] = transformation.translation.y + translation[1]
+    translation[2] = transformation.translation.y + translation[2]
+    quaternion[0] = transformation.rotation.w
+    quaternion[1] = quaternion[1] + transformation.rotation.x
+    quaternion[2] = quaternion[2] + transformation.rotation.y
+    quaternion[3] = quaternion[3] + transformation.rotation.z
+
+    rotationQuaternion = Quaternion(quaternion[0], quaternion[1], quaternion[2], quaternion[3])
+    transformed_coordinate = rotationQuaternion.rotate(origin)
+
+    transformed_coordinate[0] = transformed_coordinate[0] + translation[0]
+    transformed_coordinate[1] = transformed_coordinate[1] + translation[1]
+    transformed_coordinate[2] = transformed_coordinate[2] + translation[2]
 
     for object in self.detected_objects:
       color = object["color"]
@@ -251,16 +267,16 @@ class ImageSubscriber(Node):
 
       if (color == self.BLUE and pink_on_top == False and self.BLUE_PINK == False):
         self.BLUE_PINK = True
-        self.generate_marker()
+        self.generate_marker(transformed_coordinate, color, pink_on_top)
       elif (color == self.BLUE and pink_on_top == True and self.PINK_BLUE == False):
         self.PINK_BLUE = True
-        self.add_new_point()
+        self.generate_marker(transformed_coordinate, color, pink_on_top)
       elif (color == self.GREEN and self.GREEN_PINK == False):
         self.GREEN_PINK = True
-        self.add_new_point()
-      if (color == self.BLUE and pink_on_top == False and self.BLUE_PINK == False):
-        self.BLUE_PINK = True
-        self.add_new_point()
+        self.generate_marker(transformed_coordinate, color, pink_on_top)
+      elif (color == self.YELLOW and self.YELLOW_PINK == False):
+        self.YELLOW_PINK = True
+        self.generate_marker(transformed_coordinate, color, pink_on_top)
 
 
     # # real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker
@@ -354,9 +370,9 @@ class ImageSubscriber(Node):
     marker.scale.x = 0.17 # Change to 14 if needed
     marker.scale.y = 0.17 # Change to 14 if needed
     marker.scale.z = 0.23 # Change to 20 if needed
-    marker.color.r = top_rgb[0] / 255.0
-    marker.color.g = top_rgb[1] / 255.0
-    marker.color.b = top_rgb[2] / 255.0
+    marker.color.r = bot_rgb[0] / 255.0
+    marker.color.g = bot_rgb[1] / 255.0
+    marker.color.b = bot_rgb[2] / 255.0
     self.marker_list.markers.append(marker)
 
     self.marker_pub.publish(self.marker_list)
