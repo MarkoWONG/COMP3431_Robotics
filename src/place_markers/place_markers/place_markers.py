@@ -298,6 +298,7 @@ class ImageSubscriber(Node):
     final_coordinate[1] = rotation[1] + translation[1]
     final_coordinate[2] = rotation[2] + translation[2]
 
+    print(f"final coordinate: {final_coordinate}")
     self.add_new_point(final_coordinate, object_color, pink_on_top)
   
   def generate_marker(self, coordinate, color, pink_on_top):
