@@ -269,7 +269,7 @@ class ImageSubscriber(Node):
     pink_on_top = object["pink_on_top"]
 
     dist_objectToMarker = self.distMarkerToCamera(object_height)
-    object_realHeight = 200 # change to 0.2 if needed
+    object_realHeight = 0.2 # change to 0.2 if needed
     # object_pixelHeight = object_height * 0.2646
     similarTriangleRatio = object_realHeight / object_height
 
