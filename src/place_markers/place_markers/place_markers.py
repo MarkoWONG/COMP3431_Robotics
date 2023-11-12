@@ -37,6 +37,9 @@ class ImageSubscriber(Node):
   PINK_BLUE = False
   GREEN_PINK = False
   YELLOW_PINK = False
+  
+  marker_counter = 0
+
   """
   Create an ImageSubscriber class, which is a subclass of the Node class.
   """
@@ -46,10 +49,7 @@ class ImageSubscriber(Node):
     """
     # Initiate the Node class's constructor and give it a name
     super().__init__('image_subscriber')
-
-    self.marker_list = MarkerArray()
-    self.marker_list.markers = []
-      
+  
     # Create the subscriber. This subscriber will receive an Image
     # from the video_frames topic. The queue size is 10 messages.
     self.subscription = self.create_subscription(
@@ -61,11 +61,11 @@ class ImageSubscriber(Node):
     self.subscription # prevent unused variable warning
 
     # Subscribe to odometry
-    self.subscription = self.create_subscription(
-      Odometry,
-      '/odom',
-      self.listener_callback,
-      10)
+    # self.subscription = self.create_subscription(
+    #   Odometry,
+    #   '/odom',
+    #   self.listener_callback,
+    #   10)
     
     self.position = None
 
@@ -79,12 +79,14 @@ class ImageSubscriber(Node):
     self.tf_buffer = Buffer()
     self.tf_listener = TransformListener(self.tf_buffer, self)
 
-    self.plot_publisher = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
+    self.marker_list = MarkerArray()
+    self.marker_list.markers = []
+    self.marker_pub = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
 
-  def odom_callback(self, data):
-    pos = data.pose.pose.position
-    self.position = pos
-    (posx, posy, posz) = (pos.x, pos.y, pos.z)
+  # def odom_callback(self, data):
+  #   pos = data.pose.pose.position
+  #   self.position = pos
+  #   (posx, posy, posz) = (pos.x, pos.y, pos.z)
 
   def listener_callback(self, data):
     """
@@ -230,20 +232,26 @@ class ImageSubscriber(Node):
     if len(self.detected_objects) == 0: 
       return 
     
-    # Odometry Position
-    odom_pos = self.position
-    (posx, posy, posz) = (odom_pos.x, odom_pos.y, odom_pos.z)
+    # # Odometry Position
+    # odom_pos = self.position
+    # (posx, posy, posz) = (odom_pos.x, odom_pos.y, odom_pos.z)
 
-    # Transform odometry position to map
-    (translation, rotation) = self.tf_listener('/odom', '/map', rclpy.time.Time())
+    # # Transform odometry position to map
+    # (translation, rotation) = self.tf_listener('/odom', '/map', rclpy.time.Time())
     
+    #Transform robot's current position (base_link) to map coordinates
+    
+    translation = [0,0,0]
+    quaternion = [1,0,0,0]
+
+
     for object in self.detected_objects:
       color = object["color"]
       pink_on_top = object["pink_on_top"]
 
       if (color == self.BLUE and pink_on_top == False and self.BLUE_PINK == False):
         self.BLUE_PINK = True
-        self.add_new_point()
+        self.generate_marker()
       elif (color == self.BLUE and pink_on_top == True and self.PINK_BLUE == False):
         self.PINK_BLUE = True
         self.add_new_point()
@@ -283,11 +291,33 @@ class ImageSubscriber(Node):
     # self.add_new_point(final_coordinate, object_color, pink_on_top)
   
   def generate_marker(self, coordinate, color, pink_on_top):
-    # down cylinder
+    pink = (255.0, 0.0, 230.0)
+    yellow = (255.0, 239.0, 0.0)
+    green = (0.0, 255.0, 34.0)
+    blue = (43.0, 0.0, 255.0)
+
+    top_rgb = pink
+    if (pink_on_top == False and color == self.YELLOW):
+      top_rgb = yellow
+    elif (pink_on_top == False and color == self.GREEN):
+      top_rgb = green
+    elif (pink_on_top == False and color == self.BLUE):
+      top_rgb = blue
+
+    bot_rgb = pink
+    if (pink_on_top == True and color == self.YELLOW):
+      bot_rgb = yellow
+    elif (pink_on_top == True and color == self.GREEN):
+      bot_rgb = green
+    elif (pink_on_top == True and color == self.BLUE):
+      bot_rgb = blue
+
+    #Generate top half of the marker
     marker = Marker()
-    # marker.header.frame_id = "map"
     marker.header.frame_id = "/map"
-    marker.id = len(self.marker_list.markers) + 1
+    marker.header.stamp = rclpy.time.Time()
+    marker.id = self.marker_counter + 1
+    self.marker_counter = self.marker_counter + 1
     marker.type = marker.CYLINDER
     marker.action = marker.ADD
     marker.pose.orientation.x = 0.0
@@ -296,28 +326,22 @@ class ImageSubscriber(Node):
     marker.pose.orientation.w = 1.0
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
-    marker.pose.position.z = float(coordinate[2]) + 0.1
-    marker.scale.x = 0.14 # Change to 14 if needed
-    marker.scale.y = 0.14 # Change to 14 if needed
-    marker.scale.z = 0.2 # Change to 20 if needed
+    marker.pose.position.z = float(coordinate[2]) + 0.32
+    marker.scale.x = 0.17 # Change to 14 if needed
+    marker.scale.y = 0.17 # Change to 14 if needed
+    marker.scale.z = 0.23 # Change to 20 if needed
     marker.color.a = 1.0
-    if pink_on_top is False:
-      rgb = (255,192,203)
-    elif color == self.YELLOW:
-      rgb = (255,234,0)
-    elif color == self.BLUE:
-      rgb = (0,191,255)
-    else:
-      rgb = (0,100,0)
-    marker.color.r = rgb[0] / 255.0
-    marker.color.g = rgb[1] / 255.0
-    marker.color.b = rgb[2] / 255.0
+    marker.color.r = top_rgb[0] / 255.0
+    marker.color.g = top_rgb[1] / 255.0
+    marker.color.b = top_rgb[2] / 255.0
     self.marker_list.markers.append(marker)
 
-    # up cylinder
+    # Generate bottom half of the marker
     marker = Marker()
     marker.header.frame_id = "/map"
-    marker.id = len(self.marker_list.markers) + 1
+    marker.header.stamp = rclpy.time.Time()
+    marker.id = self.marker_counter + 1
+    self.marker_counter = self.marker_counter + 1
     marker.type = marker.CYLINDER
     marker.action = marker.ADD
     marker.pose.orientation.x = 0.0
@@ -327,34 +351,16 @@ class ImageSubscriber(Node):
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
     marker.pose.position.z = float(coordinate[2]) + 0.3
-    marker.scale.x = 0.14 # Change to 14 if needed
-    marker.scale.y = 0.14 # Change to 14 if needed
-    marker.scale.z = 0.2 # Change to 20 if needed
-    if pink_on_top is True:
-      rgb = (255,192,203)
-    elif color == self.YELLOW:
-      rgb = (255,234,0)
-    elif color == self.BLUE:
-      rgb = (0,191,255)
-    else:
-      rgb = (0,100,0)
-    marker.color.a = 1.0
-    marker.color.r = rgb[0] / 255.0
-    marker.color.g = rgb[1] / 255.0
-    marker.color.b = rgb[2] / 255.0
+    marker.scale.x = 0.17 # Change to 14 if needed
+    marker.scale.y = 0.17 # Change to 14 if needed
+    marker.scale.z = 0.23 # Change to 20 if needed
+    marker.color.r = top_rgb[0] / 255.0
+    marker.color.g = top_rgb[1] / 255.0
+    marker.color.b = top_rgb[2] / 255.0
     self.marker_list.markers.append(marker)
 
-  def add_new_point(self, coordinate, color, pink_on_top):
-    coordinate[0] = float(coordinate[0])
-    coordinate[1] = float(coordinate[1])
-    coordinate[2] = float(coordinate[2])
-    if self.check_existing_markers(coordinate, color):
-      return
-    ## print("add_new_point2")
-    self.generate_marker(coordinate, color, pink_on_top)
-    print(f"-----------Current length{len(self.marker_list.markers)}----------")
-    self.plot_publisher.publish(self.marker_list)
-      
+    self.marker_pub.publish(self.marker_list)
+
 def main(args=None):
 
   # Initialize the rclpy library
