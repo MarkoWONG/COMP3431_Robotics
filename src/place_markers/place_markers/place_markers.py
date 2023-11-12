@@ -18,6 +18,7 @@ import numpy as np
 import math
 
 from nav_msgs.msg import Odometry
+from pyquaternion import Quaternion
 
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
@@ -321,7 +322,7 @@ class ImageSubscriber(Node):
       print(f"coordinates for {object['colour']} marker is x:{coordinates[0]} y:{coordinates[1]} z:{coordinates[2]}")
       
       # Creates marker object and adds to marker list
-      self.generate_marker(coordinates, object['colour'], object['pink_on_top'])
+      self.CreateMarker(coordinates, object['colour'], object['pink_on_top'])
 
   def calculateCoordinates(self, object):
     distance = self.distMarkerToCamera(object['h'])
@@ -330,7 +331,31 @@ class ImageSubscriber(Node):
     object_x_coord = self.robot_pos_x + distance * math.cos(self.robot_yaw)
     object_y_coord = self.robot_pos_y + distance * math.sin(self.robot_yaw)
     object_z_coord = 0
-    return [object_x_coord, object_y_coord, object_z_coord]
+    obj_in_cam = [object_y_coord, object_x_coord, object_z_coord]
+    # return obj_in_cam
+  
+    # Victor's angle adjustment
+    # object_realHeight = 0.2 
+    # similarTriangleRatio = object_realHeight / object['h']
+    # rel_xToCenter = object['x'] - self.image_size[0] / 2.0
+    # cylinder_absX = rel_xToCenter * similarTriangleRatio
+    # cylinder_absY = math.sqrt(math.pow(distance, 2) - math.pow(cylinder_absX, 2))      
+    # cylinder_absZ = 0
+    # obj_in_cam = [cylinder_absY, cylinder_absX, cylinder_absZ]
+
+    # Tranform coordinate to coordinate on cartographer map
+    translation = [0,0,0]
+    quaternion = [1,0,0,0]
+    translation, quaternion = self.transformFrame("map", "camera_link", translation, quaternion)
+    if (len(translation) != 3):
+      return
+    my_quater = Quaternion(quaternion[0], quaternion[1], quaternion[2],quaternion[3])
+    rotation = my_quater.rotate(obj_in_cam)
+    final_coordinate = [0,0,0]
+    final_coordinate[0] = rotation[0] + translation[0]
+    final_coordinate[1] = rotation[1] + translation[1]
+    final_coordinate[2] = rotation[2] + translation[2]
+    return final_coordinate
   
   def distMarkerToCamera(self, marker_height):
     # Quadratic regression equation distance = a*x^2 + b*x + c
@@ -340,11 +365,30 @@ class ImageSubscriber(Node):
     distance = (a*(marker_height**2)) - (b*marker_height) + c 
     print(f"Distance From Camera to Marker was {distance}mm")
     return distance
+
+  def transformFrame(self, target, source , translation, quaternion):
+      try:
+        transform = self.tf_buffer.lookup_transform(target_frame=target, source_frame=source, time=rclpy.time.Time()).transform
+        translation[0] = translation[0] + transform.translation.x
+        translation[1] = translation[1] + transform.translation.y
+        translation[2] = translation[2] + transform.translation.z
+        quaternion[0] = transform.rotation.w
+        quaternion[1] = quaternion[1] + transform.rotation.x
+        quaternion[2] = quaternion[2] + transform.rotation.y
+        quaternion[3] = quaternion[3] + transform.rotation.z
+        return (translation, quaternion)
+      except Exception:
+        return ([0],[0])
   
-  def generate_marker(self, coordinate, color, pink_on_top):
-    # down cylinder
+  def CreateMarker(self, coordinate, color, pink_on_top):
+    # Create top half of marker
+    self.CreateHalfMarker(coordinate, color, pink_on_top, True)
+
+    # Create bottom half of marker
+    self.CreateHalfMarker(coordinate, color, pink_on_top, False)
+
+  def CreateHalfMarker(self, coordinate, color, pink_on_top, top):
     marker = Marker()
-    # marker.header.frame_id = "map"
     marker.header.frame_id = "/map"
     marker.id = len(self.marker_list.markers) + 1
     marker.type = marker.CYLINDER
@@ -355,12 +399,15 @@ class ImageSubscriber(Node):
     marker.pose.orientation.w = 1.0
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
-    marker.pose.position.z = float(coordinate[2]) + 0.1
+    if top == True:
+      marker.pose.position.z = float(coordinate[2]) + 0.3
+    else:
+      marker.pose.position.z = float(coordinate[2]) + 0.1
     marker.scale.x = 0.14
     marker.scale.y = 0.14
     marker.scale.z = 0.2
     marker.color.a = 1.0
-    if pink_on_top is False:
+    if pink_on_top == True:
       rgb = (255,192,203)
     elif color == self.YELLOW:
       rgb = (255,234,0)
@@ -371,95 +418,11 @@ class ImageSubscriber(Node):
     marker.color.r = rgb[0] / 255.0
     marker.color.g = rgb[1] / 255.0
     marker.color.b = rgb[2] / 255.0
+
+    # publish makers
     self.marker_list.markers.append(marker)
 
-  # def add_new_point(self, coordinate, color, pink_on_top):
-  #   coordinate[0] = float(coordinate[0])
-  #   coordinate[1] = float(coordinate[1])
-  #   coordinate[2] = float(coordinate[2])
-  #   if self.check_existing_markers(coordinate, color):
-  #     return
-  #   ## print("add_new_point2")
-  #   self.generate_marker(coordinate, color, pink_on_top)
-  #   print(f"-----------Current length{len(self.marker_list.markers)}----------")
-  #   self.plot_publisher.publish(self.marker_list)
-
-  # def check_existing_markers(self, point, new_color):
-  #   for marker in self.marker_list.markers:
-  #     if math.sqrt((point[0] - marker.pose.position.x)**2 + \
-  #       (point[1] - marker.pose.position.y)**2) <= 0.5:
-  #       r = marker.color.r * 255
-  #       g = marker.color.g * 255
-  #       b = marker.color.b * 255
-        
-  #       if new_color == self.BLUE and abs(r) <= 0.1 and abs(g - 191) <= 0.1 and abs(b - 255) < 0.1:
-  #         return True
-  #       elif new_color == self.YELLOW and abs(r - 255) <= 0.1 and abs(g - 234) <= 0.1 and abs(b) < 0.1:
-  #         return True
-  #       elif new_color == self.GREEN and abs(r) <= 0.1 and abs(g - 100) <= 0.1 and abs(b) < 0.1:
-  #         return True
-  #   return False
-
-  # def transform_frame(self, target, source , translation, quaternion):
-  #     try:
-  #       transform = self.tf_buffer.lookup_transform(target_frame=target, source_frame=source, time=rclpy.time.Time()).transform
-  #       translation[0] = translation[0] + transform.translation.x
-  #       translation[1] = translation[1] + transform.translation.y
-  #       translation[2] = translation[2] + transform.translation.z
-  #       quaternion[0] = transform.rotation.w
-  #       quaternion[1] = quaternion[1] + transform.rotation.x
-  #       quaternion[2] = quaternion[2] + transform.rotation.y
-  #       quaternion[3] = quaternion[3] + transform.rotation.z
-  #       return (translation, quaternion)
-  #     except Exception:
-  #       return ([0],[0])
-      
-  # def calcDistanceAndPublish(self):
-  #   if len(self.detected_objects) == 0: 
-  #     return 
-
-  #   object = self.detected_objects[0]
-  #   object_height = object["h"]
-  #   object_width = object["w"]
-  #   object_fromLeft = object["x"]
-  #   object_fromTop = object["y"]
-  #   object_area = object["area"]
-  #   object_centroid = object["centroid"]
-  #   object_color = object["color"]
-  #   pink_on_top = object["pink_on_top"]
-
-  #   dist_objectToMarker = self.distMarkerToCamera(object_height)
-  #   object_realHeight = 200
-  #   object_pixelHeight = object_height * 0.2646
-
-  #   real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker
-  #   rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0
-  #   real_xToCenter = object_realHeight / object_pixelHeight * rel_xToCenter
-    
-  #   cylinder_absX = self.robot_pos_x + real_xToCenter
-  #   cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
-  #   cylinder_absZ = 0
-    
-  #   # obj_in_cam = [cylinder_absX, cylinder_absY, 0]
-  #   obj_in_cam = [0, 0, 0]
-  #   translation = [0,0,0]
-  #   quaternion = [1,0,0,0]
-  #   translation, quaternion = self.transform_frame("map", "camera_link", translation, quaternion)
-  #   if (len(translation) != 3):
-  #     return
-
-  #   my_quater = Quaternion(quaternion[0], quaternion[1], quaternion[2],quaternion[3])
-  #   rotation = my_quater.rotate(obj_in_cam)
-  #   final_coordinate = [0,0,0]
-  #   final_coordinate[0] = rotation[0] + translation[0]
-  #   final_coordinate[1] = rotation[1] + translation[1]
-  #   final_coordinate[2] = rotation[2] + translation[2]
-
-  #   self.add_new_point(final_coordinate, object_color, pink_on_top)
-
-
 def main(args=None):
-
   # Initialize the rclpy library
   rclpy.init(args=args)
   
