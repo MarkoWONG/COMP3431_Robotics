@@ -271,7 +271,8 @@ class ImageSubscriber(Node):
     dist_objectToMarker = self.distMarkerToCamera(object_height)
     object_realHeight = 200 # change to 0.2 if needed
     # object_pixelHeight = object_height * 0.2646
-    similarTriangleRatio = object_realHeight / object_height
+    # similarTriangleRatio = object_realHeight / object_height
+    similarTriangleRatio = 0.14 / object_width
 
     # real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker
     real_distance = dist_objectToMarker # * similarTriangleRatio
@@ -280,7 +281,8 @@ class ImageSubscriber(Node):
     
     # cylinder_absX = robot_currX + real_xToCenter
     cylinder_absX = rel_xToCenter * similarTriangleRatio
-    cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
+    cylinder_absY = (self.image_size[0] / 2.0) / math.tan(math.radians(31.1)) * similarTriangleRatio
+    # cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
     cylinder_absZ = 0
     
     obj_in_cam = [cylinder_absY, cylinder_absX, 0]
