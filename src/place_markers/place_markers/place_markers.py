@@ -359,11 +359,12 @@ class ImageSubscriber(Node):
   
   def distMarkerToCamera(self, marker_height):
     # Quadratic regression equation distance = a*x^2 + b*x + c
-    a = 0.561
-    b = -62.2
-    c = 2219
-    distance = (a*(marker_height**2)) - (b*marker_height) + c 
-    print(f"Distance From Camera to Marker was {distance}mm")
+    a = 0.000561
+    b = -0.0622
+    c = 2.22
+    # distance = (a*(marker_height**2)) - (b*marker_height) + c 
+    distance = 1
+    print(f"Distance From Camera to Marker was {distance}m")
     return distance
 
   def transformFrame(self, target, source , translation, quaternion):
