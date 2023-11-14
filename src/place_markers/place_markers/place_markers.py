@@ -84,7 +84,7 @@ class ImageSubscriber(Node):
     self.tf_listener = TransformListener(self.tf_buffer, self)
 
     # Create publisher
-    self.plot_publisher = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
+    self.marker_publisher = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
 
     # --------------------- Class Members ---------------------------------------
     # Used to convert between ROS and OpenCV images
@@ -122,6 +122,7 @@ class ImageSubscriber(Node):
 
     # publish marker_list
     print(f"-----------Current length{len(self.marker_list.markers)}----------")
+    self.marker_publisher.publish(self.marker_list)
 
     # Display camera image
     cv2.namedWindow("camera")
@@ -420,7 +421,7 @@ class ImageSubscriber(Node):
     marker.color.g = rgb[1] / 255.0
     marker.color.b = rgb[2] / 255.0
 
-    # publish makers
+    # add to marker list
     self.marker_list.markers.append(marker)
 
 def main(args=None):
