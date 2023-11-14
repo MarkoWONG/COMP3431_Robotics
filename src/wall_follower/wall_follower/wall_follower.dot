@@ -1,0 +1,28 @@
+digraph G {
+    label="Wall Follower Robot ROS Nodes and Topics"
+    labelloc=top;
+    labeljust=left;
+    fontsize=16;
+    node [shape=box, style=filled, color=black, fontcolor=white];
+    edge [color=black];
+
+    subgraph cluster_nodes {
+        label="ROS Nodes"
+        style=filled;
+        color=lightgrey;
+        node [style=filled, color=blue];
+        "WallFollower Node" [shape=ellipse, color=green, fontcolor=black];
+    }
+
+    subgraph cluster_topics {
+        label="ROS Topics"
+        style=filled;
+        color=lightgrey;
+        node [style=filled, color=red, shape=ellipse, fontcolor=white];
+        "scan" "odom" "cmd_vel";
+    }
+
+    "WallFollower Node" -> "cmd_vel" [label="Publishes\n(geometry_msgs/Twist)", fontsize=10, color=blue];
+    "scan" -> "WallFollower Node" [label="Subscribes\n(sensor_msgs/LaserScan)", fontsize=10, color=red];
+    "odom" -> "WallFollower Node" [label="Subscribes\n(nav_msgs/Odometry)", fontsize=10, color=red];
+}

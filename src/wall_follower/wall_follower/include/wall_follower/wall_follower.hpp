@@ -23,6 +23,22 @@
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <vector>
+#include <cmath>
+#include <random>
+#include <limits>
+#include "wall_follower/msg/Cylinder.hpp"
+
+
+// Define a simple point structure
+struct Point {
+    float x, y;
+};
+
+struct Circle {
+    Point center;
+    float radius;
+};
 
 #define DEG2RAD (M_PI / 180.0)
 #define RAD2DEG (180.0 / M_PI)
@@ -75,6 +91,8 @@ private:
 
   // ROS topic publishers
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
+  rclcpp::Publisher<wall_follower::msg::Cylinder>::SharedPtr cylinder_pub_;
+
 
   // ROS topic subscribers
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
@@ -101,6 +119,6 @@ private:
   bool left_too_close(double side_obstacle_threshold);
   bool left_detected(double wall_detection_threshold);
   bool robot_in_empty_space(double empty_space_threshold);
-
+  std::vector<std::pair<float, float>> WallFollower::convertToCartesian(const sensor_msgs::msg::LaserScan::SharedPtr& msg)
 };
 #endif  // TURTLEBOT3_GAZEBO__TURTLEBOT3_DRIVE_HPP_

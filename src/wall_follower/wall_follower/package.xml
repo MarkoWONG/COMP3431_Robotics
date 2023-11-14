@@ -3,18 +3,22 @@
 <package format="3">
   <name>wall_follower</name>
   <version>0.0.0</version>
-  <description>Wall follwer for Waffle Pi</description>
+  <description>Wall follower for Waffle Pi</description>
   <maintainer email="claude@cse.unsw.edu.au">claude</maintainer>
   <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
- 
+
+  <!-- Dependencies for messages -->
+  <build_depend>rosidl_default_generators</build_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
   <depend>tf2</depend>
- 
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 

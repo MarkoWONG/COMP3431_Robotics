@@ -62,6 +62,8 @@ WallFollower::WallFollower()
 
 	// Initialise publishers
 	cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", qos);
+	cylinder_pub_ = this->create_publisher<wall_follower::msg::Cylinder>("detected_cylinders", qos);
+
 
 	// Initialise subscribers
 	scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
@@ -163,6 +165,27 @@ void WallFollower::scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr ms
 			scan_data_[num] = msg->ranges.at(scan_angle[num]);
 		}
 	}
+	// Convert scan data to Cartesian coordinates
+    std::vector<std::pair<float, float>> cartesian_coords = convertToCartesian(msg);
+
+    // Convert pairs to Point structure for ransacCircleFitting
+    std::vector<Point> points;
+    for (const auto& coord : cartesian_coords) {
+        points.push_back({coord.first, coord.second});
+    }
+
+    // Detect circles using RANSAC
+    int iterations = 100; // You may need to adjust this
+    float distance_threshold = 0.1; // You may need to adjust this based on the expected size of the cylinders
+    std::vector<Circle> detected_circles = ransacCircleFitting(points, iterations, distance_threshold);
+	
+	for (const auto& circle : detected_circles) {
+        your_package::msg::Cylinder cylinder_msg;
+        cylinder_msg.x = circle.center.x;
+        cylinder_msg.y = circle.center.y;
+        cylinder_msg.radius = circle.radius;
+        cylinder_pub_->publish(cylinder_msg);
+    }
 }
 
 void WallFollower::update_cmd_vel(double linear, double angular)
@@ -374,6 +397,89 @@ bool WallFollower::robot_in_empty_space(double empty_space_threshold)
 	// return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold) && (cos(55 * DEG2RAD) * scan_data_[BOTTOM_LEFT] < side_obstacle_threshold));
 	return (!obstacle_in_front(empty_space_threshold) && !left_detected(empty_space_threshold));
 
+}
+
+std::vector<std::pair<float, float>> WallFollower::convertToCartesian(const sensor_msgs::msg::LaserScan::SharedPtr& msg) {
+    std::vector<std::pair<float, float>> cartesian_coords;
+    for (size_t i = 0; i < msg->ranges.size(); ++i) {
+        float angle = msg->angle_min + i * msg->angle_increment;
+        float range = msg->ranges[i];
+        if (!std::isinf(range) && !std::isnan(range)) {
+            float x = range * cos(angle);
+            float y = range * sin(angle);
+            cartesian_coords.emplace_back(x, y);
+        }
+    }
+    return cartesian_coords;
+}
+
+// Function to calculate the circle given three points
+// This is a geometric approach to find the circumcenter of a triangle formed by three points
+Circle WallFollower::calculateCircle(const Point &p1, const Point &p2, const Point &p3) {
+    float ax = p1.x, ay = p1.y;
+    float bx = p2.x, by = p2.y;
+    float cx = p3.x, cy = p3.y;
+
+    float ox = (std::min({ax, bx, cx}) + std::max({ax, bx, cx})) / 2;
+    float oy = (std::min({ay, by, cy}) + std::max({ay, by, cy})) / 2;
+    ax -= ox; ay -= oy;
+    bx -= ox; by -= oy;
+    cx -= ox; cy -= oy;
+
+    float d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+    if (std::abs(d) < std::numeric_limits<float>::epsilon()) {
+        return { {0, 0}, 0 };
+    }
+
+    float x = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / d;
+    float y = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / d;
+    float r = std::sqrt(x * x + y * y + ((ax - bx) * (ax - bx) + (ay - by) * (ay - by)) / 2);
+
+    x += ox;
+    y += oy;
+
+    return { {x, y}, r };
+}
+
+// RANSAC for Circle Fitting
+// distance_threshold should be in meters (depends on polar coordinates)
+// iterations should be at least 1 - no. of times algo will run - more iterations = more accuracy + computational time
+std::vector<Circle> WallFollower::ransacCircleFitting(const std::vector<Point>& points, int iterations, float distance_threshold) {
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    std::uniform_int_distribution<size_t> uni(0, points.size() - 1);
+
+    std::vector<Circle> detected_circles;
+    int best_inliers = 0;
+    Circle best_circle;
+
+    for (int it = 0; it < iterations; ++it) {
+        // Randomly select 3 points
+        Point p1 = points[uni(rng)];
+        Point p2 = points[uni(rng)];
+        Point p3 = points[uni(rng)];
+
+        Circle circle = calculateCircle(p1, p2, p3);
+
+        int inliers = 0;
+        for (const auto& p : points) {
+            float dist = std::sqrt(std::pow(p.x - circle.center.x, 2) + std::pow(p.y - circle.center.y, 2));
+            if (std::abs(dist - circle.radius) < distance_threshold) {
+                ++inliers;
+            }
+        }
+
+        if (inliers > best_inliers) {
+            best_inliers = inliers;
+            best_circle = circle;
+        }
+    }
+
+    if (best_inliers > 0) {
+        detected_circles.push_back(best_circle);
+    }
+
+    return detected_circles;
 }
 
 /*******************************************************************************
