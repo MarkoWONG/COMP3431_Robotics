@@ -294,22 +294,28 @@ class ImageSubscriber(Node):
     if pink_on_top == True:
         if self.PINK_BLUE == False and dectected_colour == self.BLUE:
           self.PINK_BLUE = True
+          print("placing pink-blue")
           return True
         if self.PINK_GREEN == False and dectected_colour == self.GREEN:
           self.PINK_GREEN = True
+          print("placing pink-green")
           return True
         if self.PINK_YELLOW == False and dectected_colour == self.YELLOW:
           self.PINK_YELLOW = True
+          print("placing pink-yellow")
           return True
     else:
       if self.BLUE_PINK == False and dectected_colour == self.BLUE:
         self.BLUE_PINK = True
+        print("placing blue- pink")
         return True
       if self.GREEN_PINK == False and dectected_colour == self.GREEN:
         self.GREEN_PINK = True
+        print("placing green- pink")
         return True
       if self.YELLOW_PINK == False and dectected_colour == self.YELLOW:
         self.YELLOW_PINK = True
+        print("placing yellow - pink")
         return True
     return False
   
@@ -363,8 +369,8 @@ class ImageSubscriber(Node):
     a = 0.000561
     b = -0.0622
     c = 2.22
-    # distance = (a*(marker_height**2)) - (b*marker_height) + c 
-    distance = 1
+    distance = (a*(marker_height**2)) - (b*marker_height) + c 
+    # distance = 1
     print(f"Distance From Camera to Marker was {distance}m")
     return distance
 
