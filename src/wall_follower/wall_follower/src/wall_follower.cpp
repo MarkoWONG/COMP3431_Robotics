@@ -62,7 +62,7 @@ WallFollower::WallFollower()
 
 	// Initialise publishers
 	cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", qos);
-	cylinder_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("detected_cylinders", qos);
+	cylinder_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("detected_cylinders", qos);
 
 	// Initialise subscribers
 	scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
@@ -180,19 +180,42 @@ void WallFollower::scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr ms
 
 
     // Create a PoseArray message
-    geometry_msgs::msg::PoseArray cylinder_poses;
-    cylinder_poses.header.stamp = this->now();
-    cylinder_poses.header.frame_id = "frame_id"; // Set the appropriate frame ID
+    visualization_msgs::msg::MarkerArray cylinder_poses;
 
     // Fill the PoseArray message with the detected cylinder positions
     for (const auto& circle : detected_circles) {
-        geometry_msgs::msg::Pose pose;
-        pose.position.x = circle.center.x;
-        pose.position.y = circle.center.y;
-        pose.position.z = 0; // Assuming cylinders are on a flat surface
-        pose.orientation.w = 1.0; // Neutral orientation
+        visualization_msgs::msg::Marker marker;
+		
+		marker.header.frame_id = "map"; // Set the appropriate frame ID
+		marker.id = detected_circles.size() + 1;
+		marker.type = marker.CYLINDER;
+		marker.action = marker.ADD;
+		marker.pose.orientation.x = 0.0;
+		marker.pose.orientation.y = 0.0;
+		marker.pose.orientation.z = 0.0;
+		marker.pose.orientation.w = 1.0;
+		marker.pose.position.x = circle.center.x;
+		marker.pose.position.y = circle.center.y;
+		marker.pose.position.z = 0;
+		marker.scale.x = 0.14; 
+		marker.scale.y = 0.14;
+		marker.scale.z = 0.2; 
+		marker.color.a = 1.0;
+		// if pink_on_top is False:
+		// rgb = (255,192,203)
+		// elif color == self.YELLOW:
+		// rgb = (255,234,0)
+		// elif color == self.BLUE:
+		// rgb = (0,191,255)
+		// else:
+		// rgb = (0,100,0)
+		// make pink
+		marker.color.r = 255.0 / 255.0;
+		marker.color.g = 192 / 255.0;
+		marker.color.b = 203 / 255.0;
+		RCLCPP_INFO(this->get_logger(), "Detected circle at x: %f, y: %f, radius: %f", circle.center.x, circle.center.y, circle.radius);
 
-        cylinder_poses.poses.push_back(pose);
+        cylinder_poses.markers.push_back(marker);
     }
 
     // Publish the PoseArray message

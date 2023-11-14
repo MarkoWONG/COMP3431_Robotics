@@ -18,7 +18,8 @@
 #define WALL_FOLLOWER_HPP_
 
 #include <geometry_msgs/msg/twist.hpp>
-#include <geometry_msgs/msg/pose_array.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
@@ -91,7 +92,7 @@ private:
 
   // ROS topic publishers
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
-  rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr cylinder_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr cylinder_pub_;
 
 
   // ROS topic subscribers
