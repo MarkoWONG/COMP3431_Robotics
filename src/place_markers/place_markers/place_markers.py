@@ -33,7 +33,7 @@ class ImageSubscriber(Node):
 
   #Pixel detection thresholds
   MAX_AREA_DETECTION_THRESHOLD = 1500
-  MIN_AREA_DETECTION_THRESHOLD = 200
+  MIN_AREA_DETECTION_THRESHOLD = 425
 
   BLUE_PINK = False
   PINK_BLUE = False
@@ -292,72 +292,13 @@ class ImageSubscriber(Node):
         self.YELLOW_PINK = True
         self.generate_marker(transformed_coordinate, color, pink_on_top)
   
-  # Adds a new marker on cartographer.
+  
   def generate_marker(self, coordinate, color, pink_on_top):
-    
-    color_txt = "BLUE"
-    if (color == self.GREEN):
-      color_txt = "GREEN"
-    elif (color == self.YELLOW):
-      color_txt = "YELLOW"
-    
-    print(f"PUBlISHING {color_txt} MARKER. PINK ON TOP: {pink_on_top}. COORDINATES: {coordinate}")
-
-    pink = (255.0, 0.0, 230.0)
-    yellow = (255.0, 239.0, 0.0)
-    green = (0.0, 255.0, 34.0)
-    blue = (43.0, 0.0, 255.0)
-
-    top_rgb = pink
-    if (pink_on_top == False and color == self.YELLOW):
-      top_rgb = yellow
-    elif (pink_on_top == False and color == self.GREEN):
-      top_rgb = green
-    elif (pink_on_top == False and color == self.BLUE):
-      top_rgb = blue
-
-    print(top_rgb)
-
-    bot_rgb = pink
-    if (pink_on_top == True and color == self.YELLOW):
-      bot_rgb = yellow
-    elif (pink_on_top == True and color == self.GREEN):
-      bot_rgb = green
-    elif (pink_on_top == True and color == self.BLUE):
-      bot_rgb = blue
-      
-    print(bot_rgb)
-
-    #Generate top half of the marker
+    # down cylinder
     marker = Marker()
+    # marker.header.frame_id = "map"
     marker.header.frame_id = "/map"
-    # marker.header.stamp = rclpy.time.Time()
-    marker.id = self.marker_counter + 1
-    self.marker_counter = self.marker_counter + 1
-    marker.type = marker.CYLINDER
-    marker.action = marker.ADD
-    marker.pose.orientation.x = 0.0
-    marker.pose.orientation.y = 0.0
-    marker.pose.orientation.z = 0.0
-    marker.pose.orientation.w = 1.0
-    marker.pose.position.x = float(coordinate[0])
-    marker.pose.position.y = float(coordinate[1])
-    marker.pose.position.z = float(coordinate[2]) + 0.3
-    marker.scale.x = 0.17 # Change to 14 if needed
-    marker.scale.y = 0.17 # Change to 14 if needed
-    marker.scale.z = 0.23 # Change to 20 if needed
-    marker.color.a = 1.0
-    marker.color.r = top_rgb[0] / 255.0
-    marker.color.g = top_rgb[1] / 255.0
-    marker.color.b = top_rgb[2] / 255.0
-    self.marker_list.markers.append(marker)
-
-    # Generate bottom half of the marker
-    marker = Marker()
-    marker.header.frame_id = "/map"
-    # marker.header.stamp = rclpy.time.Time()
-    marker.id = self.marker_counter + 1
-    self.marker_counter = self.marker_counter + 1
+    marker.id = len(self.marker_list.markers) + 1
     marker.type = marker.CYLINDER
     marker.action = marker.ADD
     marker.pose.orientation.x = 0.0
@@ -367,15 +308,138 @@ class ImageSubscriber(Node):
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
     marker.pose.position.z = float(coordinate[2]) + 0.1
-    marker.scale.x = 0.17 # Change to 14 if needed
-    marker.scale.y = 0.17 # Change to 14 if needed
-    marker.scale.z = 0.23 # Change to 20 if needed
-    marker.color.r = bot_rgb[0] / 255.0
-    marker.color.g = bot_rgb[1] / 255.0
-    marker.color.b = bot_rgb[2] / 255.0
+    marker.scale.x = 0.14 # Change to 14 if needed
+    marker.scale.y = 0.14 # Change to 14 if needed
+    marker.scale.z = 0.2 # Change to 20 if needed
+    marker.color.a = 1.0
+    if pink_on_top is False:
+      rgb = (255,192,203)
+    elif color == self.YELLOW:
+      rgb = (255,234,0)
+    elif color == self.BLUE:
+      rgb = (0,191,255)
+    else:
+      rgb = (0,100,0)
+    marker.color.r = rgb[0] / 255.0
+    marker.color.g = rgb[1] / 255.0
+    marker.color.b = rgb[2] / 255.0
     self.marker_list.markers.append(marker)
 
+    # up cylinder
+    marker = Marker()
+    marker.header.frame_id = "/map"
+    marker.id = len(self.marker_list.markers) + 1
+    marker.type = marker.CYLINDER
+    marker.action = marker.ADD
+    marker.pose.orientation.x = 0.0
+    marker.pose.orientation.y = 0.0
+    marker.pose.orientation.z = 0.0
+    marker.pose.orientation.w = 1.0
+    marker.pose.position.x = float(coordinate[0])
+    marker.pose.position.y = float(coordinate[1])
+    marker.pose.position.z = float(coordinate[2]) + 0.3
+    marker.scale.x = 0.14 # Change to 14 if needed
+    marker.scale.y = 0.14 # Change to 14 if needed
+    marker.scale.z = 0.2 # Change to 20 if needed
+    if pink_on_top is True:
+      rgb = (255,192,203)
+    elif color == self.YELLOW:
+      rgb = (255,234,0)
+    elif color == self.BLUE:
+      rgb = (0,191,255)
+    else:
+      rgb = (0,100,0)
+    marker.color.a = 1.0
+    marker.color.r = rgb[0] / 255.0
+    marker.color.g = rgb[1] / 255.0
+    marker.color.b = rgb[2] / 255.0
+    self.marker_list.markers.append(marker)
     self.marker_pub.publish(self.marker_list)
+    
+  # Adds a new marker on cartographer.
+  # def generate_marker(self, coordinate, color, pink_on_top):
+    
+  #   color_txt = "BLUE"
+  #   if (color == self.GREEN):
+  #     color_txt = "GREEN"
+  #   elif (color == self.YELLOW):
+  #     color_txt = "YELLOW"
+    
+  #   print(f"PUBlISHING {color_txt} MARKER. PINK ON TOP: {pink_on_top}. COORDINATES: {coordinate}")
+
+  #   pink = (255.0, 0.0, 230.0)
+  #   yellow = (255.0, 239.0, 0.0)
+  #   green = (0.0, 255.0, 34.0)
+  #   blue = (43.0, 0.0, 255.0)
+
+  #   top_rgb = pink
+  #   if (pink_on_top == False and color == self.YELLOW):
+  #     top_rgb = yellow
+  #   elif (pink_on_top == False and color == self.GREEN):
+  #     top_rgb = green
+  #   elif (pink_on_top == False and color == self.BLUE):
+  #     top_rgb = blue
+
+  #   print(top_rgb)
+
+  #   bot_rgb = pink
+  #   if (pink_on_top == True and color == self.YELLOW):
+  #     bot_rgb = yellow
+  #   elif (pink_on_top == True and color == self.GREEN):
+  #     bot_rgb = green
+  #   elif (pink_on_top == True and color == self.BLUE):
+  #     bot_rgb = blue
+      
+  #   print(bot_rgb)
+
+  #   #Generate top half of the marker
+  #   marker = Marker()
+  #   marker.header.frame_id = "/map"
+  #   # marker.header.stamp = rclpy.time.Time()
+  #   marker.id = self.marker_counter + 1
+  #   self.marker_counter = self.marker_counter + 1
+  #   marker.type = marker.CYLINDER
+  #   marker.action = marker.ADD
+  #   marker.pose.orientation.x = 0.0
+  #   marker.pose.orientation.y = 0.0
+  #   marker.pose.orientation.z = 0.0
+  #   marker.pose.orientation.w = 1.0
+  #   marker.pose.position.x = float(coordinate[0])
+  #   marker.pose.position.y = float(coordinate[1])
+  #   marker.pose.position.z = float(coordinate[2]) + 0.3
+  #   marker.scale.x = 0.17 # Change to 14 if needed
+  #   marker.scale.y = 0.17 # Change to 14 if needed
+  #   marker.scale.z = 0.23 # Change to 20 if needed
+  #   marker.color.a = 1.0
+  #   marker.color.r = top_rgb[0] / 255.0
+  #   marker.color.g = top_rgb[1] / 255.0
+  #   marker.color.b = top_rgb[2] / 255.0
+  #   self.marker_list.markers.append(marker)
+
+  #   # Generate bottom half of the marker
+  #   marker = Marker()
+  #   marker.header.frame_id = "/map"
+  #   # marker.header.stamp = rclpy.time.Time()
+  #   marker.id = self.marker_counter + 1
+  #   self.marker_counter = self.marker_counter + 1
+  #   marker.type = marker.CYLINDER
+  #   marker.action = marker.ADD
+  #   marker.pose.orientation.x = 0.0
+  #   marker.pose.orientation.y = 0.0
+  #   marker.pose.orientation.z = 0.0
+  #   marker.pose.orientation.w = 1.0
+  #   marker.pose.position.x = float(coordinate[0])
+  #   marker.pose.position.y = float(coordinate[1])
+  #   marker.pose.position.z = float(coordinate[2]) + 0.1
+  #   marker.scale.x = 0.17 # Change to 14 if needed
+  #   marker.scale.y = 0.17 # Change to 14 if needed
+  #   marker.scale.z = 0.23 # Change to 20 if needed
+  #   marker.color.r = bot_rgb[0] / 255.0
+  #   marker.color.g = bot_rgb[1] / 255.0
+  #   marker.color.b = bot_rgb[2] / 255.0
+  #   self.marker_list.markers.append(marker)
+
+  #   self.marker_pub.publish(self.marker_list)
 
 def main(args=None):
 
