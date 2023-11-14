@@ -164,8 +164,10 @@ class ImageSubscriber(Node):
       w = stats[i, cv2.CC_STAT_WIDTH]
       h = stats[i, cv2.CC_STAT_HEIGHT]
       area = stats[i, cv2.CC_STAT_AREA]
+      
         
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
+    
         (centroid_x1, centroid_y1) = centroids[i]
         pink_on_top = True
 
@@ -284,13 +286,13 @@ class ImageSubscriber(Node):
   # Adds a new marker on cartographer.
   def generate_marker(self, coordinate, color, pink_on_top):
     
-    color = "BLUE"
+    color_txt = "BLUE"
     if (color == self.GREEN):
-      color = "GREEN"
+      color_txt = "GREEN"
     elif (color == self.YELLOW):
-      color = "YELLOW"
+      color_txt = "YELLOW"
     
-    print(f"PUBlISHING {color} MARKER. PINK ON TOP: {pink_on_top}. COORDINATES: {coordinate}")
+    print(f"PUBlISHING {color_txt} MARKER. PINK ON TOP: {pink_on_top}. COORDINATES: {coordinate}")
 
     pink = (255.0, 0.0, 230.0)
     yellow = (255.0, 239.0, 0.0)
@@ -331,7 +333,7 @@ class ImageSubscriber(Node):
     marker.pose.orientation.w = 1.0
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
-    marker.pose.position.z = float(coordinate[2]) + 0.22
+    marker.pose.position.z = float(coordinate[2]) + 0.3
     marker.scale.x = 0.17 # Change to 14 if needed
     marker.scale.y = 0.17 # Change to 14 if needed
     marker.scale.z = 0.23 # Change to 20 if needed
