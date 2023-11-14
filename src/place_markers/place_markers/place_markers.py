@@ -33,7 +33,7 @@ class ImageSubscriber(Node):
 
   #Pixel detection thresholds
   MAX_AREA_DETECTION_THRESHOLD = 1500
-  MIN_AREA_DETECTION_THRESHOLD = 300
+  MIN_AREA_DETECTION_THRESHOLD = 80
 
   BLUE_PINK = False
   PINK_BLUE = False
@@ -97,9 +97,10 @@ class ImageSubscriber(Node):
     """
     #Clear list of deteted objects
     self.detected_objects = []
+    # print(self.detected_objects)
     
     # Display the message on the console
-    self.get_logger().info('Receiving video frame')
+    # self.get_logger().info('Receiving video frame')
  
     # Convert ROS Image message to OpenCV image
     current_frame = self.br.imgmsg_to_cv2(data)
@@ -228,7 +229,7 @@ class ImageSubscriber(Node):
         
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         self.detected_objects.append({"color": color, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
-        print(f"color: {color}, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}")
+        # print(f"color: {color}, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}")
   
   def calcDistanceAndPublish(self):
     if len(self.detected_objects) == 0: 
@@ -304,6 +305,8 @@ class ImageSubscriber(Node):
     elif (pink_on_top == False and color == self.BLUE):
       top_rgb = blue
 
+    print(top_rgb)
+
     bot_rgb = pink
     if (pink_on_top == True and color == self.YELLOW):
       bot_rgb = yellow
@@ -311,11 +314,13 @@ class ImageSubscriber(Node):
       bot_rgb = green
     elif (pink_on_top == True and color == self.BLUE):
       bot_rgb = blue
+      
+    print(bot_rgb)
 
     #Generate top half of the marker
     marker = Marker()
     marker.header.frame_id = "/map"
-    marker.header.stamp = rclpy.time.Time()
+    # marker.header.stamp = rclpy.time.Time()
     marker.id = self.marker_counter + 1
     self.marker_counter = self.marker_counter + 1
     marker.type = marker.CYLINDER
@@ -326,7 +331,7 @@ class ImageSubscriber(Node):
     marker.pose.orientation.w = 1.0
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
-    marker.pose.position.z = float(coordinate[2]) + 0.32
+    marker.pose.position.z = float(coordinate[2]) + 0.22
     marker.scale.x = 0.17 # Change to 14 if needed
     marker.scale.y = 0.17 # Change to 14 if needed
     marker.scale.z = 0.23 # Change to 20 if needed
@@ -339,7 +344,7 @@ class ImageSubscriber(Node):
     # Generate bottom half of the marker
     marker = Marker()
     marker.header.frame_id = "/map"
-    marker.header.stamp = rclpy.time.Time()
+    # marker.header.stamp = rclpy.time.Time()
     marker.id = self.marker_counter + 1
     self.marker_counter = self.marker_counter + 1
     marker.type = marker.CYLINDER
@@ -350,7 +355,7 @@ class ImageSubscriber(Node):
     marker.pose.orientation.w = 1.0
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
-    marker.pose.position.z = float(coordinate[2]) + 0.08
+    marker.pose.position.z = float(coordinate[2]) + 0.1
     marker.scale.x = 0.17 # Change to 14 if needed
     marker.scale.y = 0.17 # Change to 14 if needed
     marker.scale.z = 0.23 # Change to 20 if needed
