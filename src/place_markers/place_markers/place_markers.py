@@ -143,6 +143,15 @@ class ImageSubscriber(Node):
     dark_yellow = (35, 255, 255)
     yellow_mask = cv2.inRange(hsv_frame, light_yellow, dark_yellow)
     result = cv2.bitwise_and(current_frame, current_frame, mask=yellow_mask)
+    
+    cv2.namedWindow("camera1")
+    cv2.imshow("camera1", pink_mask)
+    cv2.namedWindow("camera2")
+    cv2.imshow("camera2", green_mask)
+    cv2.namedWindow("camera2")
+    cv2.imshow("camera2", blue_mask)
+    cv2.namedWindow("camera3")
+    cv2.imshow("camera3", yellow_mask)
 
     #First detect pink
     # Run 4-way connected components, with statistics for blue+pink objects
