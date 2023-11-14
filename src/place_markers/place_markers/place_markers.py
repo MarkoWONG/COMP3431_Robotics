@@ -33,7 +33,7 @@ class ImageSubscriber(Node):
 
   #Pixel detection thresholds
   MAX_AREA_DETECTION_THRESHOLD = 1500
-  MIN_AREA_DETECTION_THRESHOLD = 80
+  MIN_AREA_DETECTION_THRESHOLD = 200
 
   BLUE_PINK = False
   PINK_BLUE = False
