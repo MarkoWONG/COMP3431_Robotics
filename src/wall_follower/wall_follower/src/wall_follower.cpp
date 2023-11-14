@@ -62,8 +62,7 @@ WallFollower::WallFollower()
 
 	// Initialise publishers
 	cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", qos);
-	cylinder_pub_ = this->create_publisher<wall_follower::msg::Cylinder>("detected_cylinders", qos);
-
+	cylinder_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("detected_cylinders", qos);
 
 	// Initialise subscribers
 	scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
@@ -173,19 +172,31 @@ void WallFollower::scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr ms
     for (const auto& coord : cartesian_coords) {
         points.push_back({coord.first, coord.second});
     }
-
-    // Detect circles using RANSAC
-    int iterations = 100; // You may need to adjust this
-    float distance_threshold = 0.1; // You may need to adjust this based on the expected size of the cylinders
-    std::vector<Circle> detected_circles = ransacCircleFitting(points, iterations, distance_threshold);
 	
-	for (const auto& circle : detected_circles) {
-        your_package::msg::Cylinder cylinder_msg;
-        cylinder_msg.x = circle.center.x;
-        cylinder_msg.y = circle.center.y;
-        cylinder_msg.radius = circle.radius;
-        cylinder_pub_->publish(cylinder_msg);
+	// Detect circles using RANSAC
+    int iterations = 100; // Adjust as needed
+    float distance_threshold = 0.1; // Adjust as needed
+    std::vector<Circle> detected_circles = ransacCircleFitting(points, iterations, distance_threshold);
+
+
+    // Create a PoseArray message
+    geometry_msgs::msg::PoseArray cylinder_poses;
+    cylinder_poses.header.stamp = this->now();
+    cylinder_poses.header.frame_id = "frame_id"; // Set the appropriate frame ID
+
+    // Fill the PoseArray message with the detected cylinder positions
+    for (const auto& circle : detected_circles) {
+        geometry_msgs::msg::Pose pose;
+        pose.position.x = circle.center.x;
+        pose.position.y = circle.center.y;
+        pose.position.z = 0; // Assuming cylinders are on a flat surface
+        pose.orientation.w = 1.0; // Neutral orientation
+
+        cylinder_poses.poses.push_back(pose);
     }
+
+    // Publish the PoseArray message
+    cylinder_pub_->publish(cylinder_poses);
 }
 
 void WallFollower::update_cmd_vel(double linear, double angular)

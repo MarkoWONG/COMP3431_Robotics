@@ -18,6 +18,7 @@
 #define WALL_FOLLOWER_HPP_
 
 #include <geometry_msgs/msg/twist.hpp>
+#include <geometry_msgs/msg/pose_array.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
@@ -27,7 +28,6 @@
 #include <cmath>
 #include <random>
 #include <limits>
-#include "wall_follower/msg/Cylinder.hpp"
 
 
 // Define a simple point structure
@@ -91,7 +91,7 @@ private:
 
   // ROS topic publishers
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
-  rclcpp::Publisher<wall_follower::msg::Cylinder>::SharedPtr cylinder_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr cylinder_pub_;
 
 
   // ROS topic subscribers
@@ -119,6 +119,8 @@ private:
   bool left_too_close(double side_obstacle_threshold);
   bool left_detected(double wall_detection_threshold);
   bool robot_in_empty_space(double empty_space_threshold);
-  std::vector<std::pair<float, float>> WallFollower::convertToCartesian(const sensor_msgs::msg::LaserScan::SharedPtr& msg)
+  std::vector<std::pair<float, float>> convertToCartesian(const sensor_msgs::msg::LaserScan::SharedPtr& msg);
+  std::vector<Circle> ransacCircleFitting(const std::vector<Point>& points, int iterations, float distance_threshold);
+  Circle calculateCircle(const Point &p1, const Point &p2, const Point &p3);
 };
 #endif  // TURTLEBOT3_GAZEBO__TURTLEBOT3_DRIVE_HPP_
