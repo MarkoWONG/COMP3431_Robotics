@@ -32,11 +32,11 @@ class ImageSubscriber(Node):
   YELLOW = 3
 
   #Pixel detection thresholds
-  MAX_AREA_DETECTION_THRESHOLD = 1500
-  MIN_AREA_DETECTION_THRESHOLD = 425
+  MAX_AREA_DETECTION_THRESHOLD = 2000
+  MIN_AREA_DETECTION_THRESHOLD = 400
 
   BLUE_PINK = False
-  PINK_BLUE = False
+  PINK_GREEN = False
   GREEN_PINK = False
   YELLOW_PINK = False
   
@@ -279,13 +279,13 @@ class ImageSubscriber(Node):
       pink_on_top = object["pink_on_top"]
       
       #Check if a marker of the same colour has already been added.
-      if (color == self.BLUE and pink_on_top == False and self.BLUE_PINK == False):
+      if (color == self.BLUE and self.BLUE_PINK == False):
         self.BLUE_PINK = True
         self.generate_marker(transformed_coordinate, color, pink_on_top)
-      elif (color == self.BLUE and pink_on_top == True and self.PINK_BLUE == False):
-        self.PINK_BLUE = True
+      elif (color == self.GREEN and pink_on_top == True and self.PINK_GREEN == False):
+        self.PINK_GREEN = True
         self.generate_marker(transformed_coordinate, color, pink_on_top)
-      elif (color == self.GREEN and self.GREEN_PINK == False):
+      elif (color == self.GREEN and pink_on_top == False and self.GREEN_PINK == False):
         self.GREEN_PINK = True
         self.generate_marker(transformed_coordinate, color, pink_on_top)
       elif (color == self.YELLOW and self.YELLOW_PINK == False):
