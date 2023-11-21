@@ -77,7 +77,7 @@ WallFollower::WallFollower()
 	/************************************************************
 	** Initialise ROS timers
 	************************************************************/
-	update_timer_ = this->create_wall_timer(10ms, std::bind(&WallFollower::update_callback, this)); //default value is 10ms
+	update_timer_ = this->create_wall_timer(20ms, std::bind(&WallFollower::update_callback, this)); //default value is 10ms
 
 	// Initialise wallfollower vars
 	leftStart = false;
@@ -184,7 +184,7 @@ void WallFollower::update_callback()
 	double frontal_obstacle_threshold = 0.40; // 0.35
 	double side_obstacle_threshold = 0.29;
 	double wall_detection_threshold = 0.35; // 0.32
-	double empty_space_threshold = 0.34;
+	double empty_space_threshold = 0.32;
 
 	if (!STOP){
 	switch (turtlebot3_state_num)

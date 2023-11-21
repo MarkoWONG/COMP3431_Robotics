@@ -32,11 +32,11 @@ class ImageSubscriber(Node):
   YELLOW = 3
 
   #Pixel detection thresholds
-  MAX_AREA_DETECTION_THRESHOLD = 1500
-  MIN_AREA_DETECTION_THRESHOLD = 300
+  MAX_AREA_DETECTION_THRESHOLD = 2000
+  MIN_AREA_DETECTION_THRESHOLD = 400
 
   BLUE_PINK = False
-  PINK_BLUE = False
+  PINK_GREEN = False
   GREEN_PINK = False
   YELLOW_PINK = False
   
@@ -97,9 +97,10 @@ class ImageSubscriber(Node):
     """
     #Clear list of deteted objects
     self.detected_objects = []
+    # print(self.detected_objects)
     
     # Display the message on the console
-    self.get_logger().info('Receiving video frame')
+    # self.get_logger().info('Receiving video frame')
  
     # Convert ROS Image message to OpenCV image
     current_frame = self.br.imgmsg_to_cv2(data)
@@ -142,6 +143,15 @@ class ImageSubscriber(Node):
     dark_yellow = (35, 255, 255)
     yellow_mask = cv2.inRange(hsv_frame, light_yellow, dark_yellow)
     result = cv2.bitwise_and(current_frame, current_frame, mask=yellow_mask)
+    
+    cv2.namedWindow("camera1")
+    cv2.imshow("camera1", pink_mask)
+    cv2.namedWindow("camera2")
+    cv2.imshow("camera2", green_mask)
+    cv2.namedWindow("camera2")
+    cv2.imshow("camera2", blue_mask)
+    cv2.namedWindow("camera3")
+    cv2.imshow("camera3", yellow_mask)
 
     #First detect pink
     # Run 4-way connected components, with statistics for blue+pink objects
@@ -163,8 +173,10 @@ class ImageSubscriber(Node):
       w = stats[i, cv2.CC_STAT_WIDTH]
       h = stats[i, cv2.CC_STAT_HEIGHT]
       area = stats[i, cv2.CC_STAT_AREA]
+      
         
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
+    
         (centroid_x1, centroid_y1) = centroids[i]
         pink_on_top = True
 
@@ -228,7 +240,7 @@ class ImageSubscriber(Node):
         
       if area >= self.MIN_AREA_DETECTION_THRESHOLD and area <= self.MAX_AREA_DETECTION_THRESHOLD:
         self.detected_objects.append({"color": color, "pink_on_top": pink_on_top, "x": x, "y": y, "w": w, "h": h, "area": area, "centroid": centroids[i]})
-        print(f"color: {color}, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}")
+        # print(f"color: {color}, pink on top: {pink_on_top}, width: {w}, height: {h}, area: {area}")
   
   def calcDistanceAndPublish(self):
     if len(self.detected_objects) == 0: 
@@ -267,57 +279,26 @@ class ImageSubscriber(Node):
       pink_on_top = object["pink_on_top"]
       
       #Check if a marker of the same colour has already been added.
-      if (color == self.BLUE and pink_on_top == False and self.BLUE_PINK == False):
+      if (color == self.BLUE and self.BLUE_PINK == False):
         self.BLUE_PINK = True
         self.generate_marker(transformed_coordinate, color, pink_on_top)
-      elif (color == self.BLUE and pink_on_top == True and self.PINK_BLUE == False):
-        self.PINK_BLUE = True
+      elif (color == self.GREEN and pink_on_top == True and self.PINK_GREEN == False):
+        self.PINK_GREEN = True
         self.generate_marker(transformed_coordinate, color, pink_on_top)
-      elif (color == self.GREEN and self.GREEN_PINK == False):
+      elif (color == self.GREEN and pink_on_top == False and self.GREEN_PINK == False):
         self.GREEN_PINK = True
         self.generate_marker(transformed_coordinate, color, pink_on_top)
       elif (color == self.YELLOW and self.YELLOW_PINK == False):
         self.YELLOW_PINK = True
         self.generate_marker(transformed_coordinate, color, pink_on_top)
   
-  # Adds a new marker on cartographer.
+  
   def generate_marker(self, coordinate, color, pink_on_top):
-    
-    color = "BLUE"
-    if (color == self.GREEN):
-      color = "GREEN"
-    elif (color == self.YELLOW):
-      color = "YELLOW"
-    
-    print(f"PUBlISHING {color} MARKER. PINK ON TOP: {pink_on_top}. COORDINATES: {coordinate}")
-
-    pink = (255.0, 0.0, 230.0)
-    yellow = (255.0, 239.0, 0.0)
-    green = (0.0, 255.0, 34.0)
-    blue = (43.0, 0.0, 255.0)
-
-    top_rgb = pink
-    if (pink_on_top == False and color == self.YELLOW):
-      top_rgb = yellow
-    elif (pink_on_top == False and color == self.GREEN):
-      top_rgb = green
-    elif (pink_on_top == False and color == self.BLUE):
-      top_rgb = blue
-
-    bot_rgb = pink
-    if (pink_on_top == True and color == self.YELLOW):
-      bot_rgb = yellow
-    elif (pink_on_top == True and color == self.GREEN):
-      bot_rgb = green
-    elif (pink_on_top == True and color == self.BLUE):
-      bot_rgb = blue
-
-    #Generate top half of the marker
+    # down cylinder
     marker = Marker()
+    # marker.header.frame_id = "map"
     marker.header.frame_id = "/map"
-    marker.header.stamp = rclpy.time.Time()
-    marker.id = self.marker_counter + 1
-    self.marker_counter = self.marker_counter + 1
+    marker.id = len(self.marker_list.markers) + 1
     marker.type = marker.CYLINDER
     marker.action = marker.ADD
     marker.pose.orientation.x = 0.0
@@ -326,22 +307,28 @@ class ImageSubscriber(Node):
     marker.pose.orientation.w = 1.0
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
-    marker.pose.position.z = float(coordinate[2]) + 0.32
-    marker.scale.x = 0.17 # Change to 14 if needed
-    marker.scale.y = 0.17 # Change to 14 if needed
-    marker.scale.z = 0.23 # Change to 20 if needed
+    marker.pose.position.z = float(coordinate[2]) + 0.1
+    marker.scale.x = 0.14 # Change to 14 if needed
+    marker.scale.y = 0.14 # Change to 14 if needed
+    marker.scale.z = 0.2 # Change to 20 if needed
     marker.color.a = 1.0
-    marker.color.r = top_rgb[0] / 255.0
-    marker.color.g = top_rgb[1] / 255.0
-    marker.color.b = top_rgb[2] / 255.0
+    if pink_on_top is False:
+      rgb = (255,192,203)
+    elif color == self.YELLOW:
+      rgb = (255,234,0)
+    elif color == self.BLUE:
+      rgb = (0,191,255)
+    else:
+      rgb = (0,100,0)
+    marker.color.r = rgb[0] / 255.0
+    marker.color.g = rgb[1] / 255.0
+    marker.color.b = rgb[2] / 255.0
     self.marker_list.markers.append(marker)
 
-    # Generate bottom half of the marker
+    # up cylinder
     marker = Marker()
     marker.header.frame_id = "/map"
-    marker.header.stamp = rclpy.time.Time()
-    marker.id = self.marker_counter + 1
-    self.marker_counter = self.marker_counter + 1
+    marker.id = len(self.marker_list.markers) + 1
     marker.type = marker.CYLINDER
     marker.action = marker.ADD
     marker.pose.orientation.x = 0.0
@@ -350,16 +337,109 @@ class ImageSubscriber(Node):
     marker.pose.orientation.w = 1.0
     marker.pose.position.x = float(coordinate[0])
     marker.pose.position.y = float(coordinate[1])
-    marker.pose.position.z = float(coordinate[2]) + 0.08
-    marker.scale.x = 0.17 # Change to 14 if needed
-    marker.scale.y = 0.17 # Change to 14 if needed
-    marker.scale.z = 0.23 # Change to 20 if needed
-    marker.color.r = bot_rgb[0] / 255.0
-    marker.color.g = bot_rgb[1] / 255.0
-    marker.color.b = bot_rgb[2] / 255.0
+    marker.pose.position.z = float(coordinate[2]) + 0.3
+    marker.scale.x = 0.14 # Change to 14 if needed
+    marker.scale.y = 0.14 # Change to 14 if needed
+    marker.scale.z = 0.2 # Change to 20 if needed
+    if pink_on_top is True:
+      rgb = (255,192,203)
+    elif color == self.YELLOW:
+      rgb = (255,234,0)
+    elif color == self.BLUE:
+      rgb = (0,191,255)
+    else:
+      rgb = (0,100,0)
+    marker.color.a = 1.0
+    marker.color.r = rgb[0] / 255.0
+    marker.color.g = rgb[1] / 255.0
+    marker.color.b = rgb[2] / 255.0
     self.marker_list.markers.append(marker)
-
     self.marker_pub.publish(self.marker_list)
+    
+  # Adds a new marker on cartographer.
+  # def generate_marker(self, coordinate, color, pink_on_top):
+    
+  #   color_txt = "BLUE"
+  #   if (color == self.GREEN):
+  #     color_txt = "GREEN"
+  #   elif (color == self.YELLOW):
+  #     color_txt = "YELLOW"
+    
+  #   print(f"PUBlISHING {color_txt} MARKER. PINK ON TOP: {pink_on_top}. COORDINATES: {coordinate}")
+
+  #   pink = (255.0, 0.0, 230.0)
+  #   yellow = (255.0, 239.0, 0.0)
+  #   green = (0.0, 255.0, 34.0)
+  #   blue = (43.0, 0.0, 255.0)
+
+  #   top_rgb = pink
+  #   if (pink_on_top == False and color == self.YELLOW):
+  #     top_rgb = yellow
+  #   elif (pink_on_top == False and color == self.GREEN):
+  #     top_rgb = green
+  #   elif (pink_on_top == False and color == self.BLUE):
+  #     top_rgb = blue
+
+  #   print(top_rgb)
+
+  #   bot_rgb = pink
+  #   if (pink_on_top == True and color == self.YELLOW):
+  #     bot_rgb = yellow
+  #   elif (pink_on_top == True and color == self.GREEN):
+  #     bot_rgb = green
+  #   elif (pink_on_top == True and color == self.BLUE):
+  #     bot_rgb = blue
+      
+  #   print(bot_rgb)
+
+  #   #Generate top half of the marker
+  #   marker = Marker()
+  #   marker.header.frame_id = "/map"
+  #   # marker.header.stamp = rclpy.time.Time()
+  #   marker.id = self.marker_counter + 1
+  #   self.marker_counter = self.marker_counter + 1
+  #   marker.type = marker.CYLINDER
+  #   marker.action = marker.ADD
+  #   marker.pose.orientation.x = 0.0
+  #   marker.pose.orientation.y = 0.0
+  #   marker.pose.orientation.z = 0.0
+  #   marker.pose.orientation.w = 1.0
+  #   marker.pose.position.x = float(coordinate[0])
+  #   marker.pose.position.y = float(coordinate[1])
+  #   marker.pose.position.z = float(coordinate[2]) + 0.3
+  #   marker.scale.x = 0.17 # Change to 14 if needed
+  #   marker.scale.y = 0.17 # Change to 14 if needed
+  #   marker.scale.z = 0.23 # Change to 20 if needed
+  #   marker.color.a = 1.0
+  #   marker.color.r = top_rgb[0] / 255.0
+  #   marker.color.g = top_rgb[1] / 255.0
+  #   marker.color.b = top_rgb[2] / 255.0
+  #   self.marker_list.markers.append(marker)
+
+  #   # Generate bottom half of the marker
+  #   marker = Marker()
+  #   marker.header.frame_id = "/map"
+  #   # marker.header.stamp = rclpy.time.Time()
+  #   marker.id = self.marker_counter + 1
+  #   self.marker_counter = self.marker_counter + 1
+  #   marker.type = marker.CYLINDER
+  #   marker.action = marker.ADD
+  #   marker.pose.orientation.x = 0.0
+  #   marker.pose.orientation.y = 0.0
+  #   marker.pose.orientation.z = 0.0
+  #   marker.pose.orientation.w = 1.0
+  #   marker.pose.position.x = float(coordinate[0])
+  #   marker.pose.position.y = float(coordinate[1])
+  #   marker.pose.position.z = float(coordinate[2]) + 0.1
+  #   marker.scale.x = 0.17 # Change to 14 if needed
+  #   marker.scale.y = 0.17 # Change to 14 if needed
+  #   marker.scale.z = 0.23 # Change to 20 if needed
+  #   marker.color.r = bot_rgb[0] / 255.0
+  #   marker.color.g = bot_rgb[1] / 255.0
+  #   marker.color.b = bot_rgb[2] / 255.0
+  #   self.marker_list.markers.append(marker)
+
+  #   self.marker_pub.publish(self.marker_list)
 
 def main(args=None):
 
