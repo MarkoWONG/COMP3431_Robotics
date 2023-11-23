@@ -350,6 +350,58 @@ class ImageSubscriber(Node):
 
     self.marker_pub.publish(self.marker_list)   
 
+  #######################################################################################################################
+  # NOTE: WE DID NOT USE THE FUNCTIONS BELOW IN OUR DEMONSTRATION. THESE FUNCTIONS ARE FOR MARKER LOCALISATION #
+  #######################################################################################################################
+  
+  # def showDistance(self, marker_height):
+  #   if (marker_height >= 15 and marker_height <= 65):
+  #     print(f'Distance to marker is {self.distMarkerToCamera(marker_height)}')
+  #   else:
+  #     print(f"Too close or far to marker, Distance won't be accurate. Distance is less than 200mm or greater than 500mm")
+      
+  # def distMarkerToCamera(self, marker_height):
+  #   # Quadratic regression equation distance = a*x^2 + b*x + c
+  #   a = 0.000561
+  #   b = -0.0622
+  #   c = 2.22
+  #   distance = (a*(marker_height**2)) - (b*marker_height) + c 
+  #   # self.showDistance(marker_height)
+  #   return distance # return 1 for debugging
+
+  # def calcDistanceAndPublish(self):
+  #   if len(self.detected_objects) == 0: 
+  #     return 
+
+  #   robot_currX = 0;
+  #   robot_currY = 0;
+  #   robot_currZ = 0;
+    
+  #   object = self.detected_objects[0]
+  #   object_height = object["h"]
+  #   object_width = object["w"]
+  #   object_fromLeft = object["x"]
+  #   object_fromTop = object["y"]
+  #   object_area = object["area"]
+  #   object_centroid = object["centroid"]
+  #   object_color = object["color"]
+  #   pink_on_top = object["pink_on_top"]
+
+  #   dist_objectToMarker = self.distMarkerToCamera(object_height)
+  #   object_realHeight = 0.2 # change to 0.2 if needed
+  #   # object_pixelHeight = object_height * 0.2646
+  #   similarTriangleRatio = object_realHeight / object_height
+
+  #   # real_distance = object_realHeight / object_pixelHeight * dist_objectToMarker
+  #   real_distance = dist_objectToMarker # * similarTriangleRatio
+  #   rel_xToCenter = object_fromLeft - self.image_size[0] / 2.0
+  #   # real_xToCenter = object_realHeight / object_pixelHeight * rel_xToCenter
+    
+  #   # cylinder_absX = robot_currX + real_xToCenter
+  #   cylinder_absX = rel_xToCenter * similarTriangleRatio
+  #   cylinder_absY = math.sqrt(math.pow(real_distance, 2) - math.pow(cylinder_absX, 2))      
+  #   cylinder_absZ = 0
+    
 def main(args=None):
 
   # Initialize the rclpy library
